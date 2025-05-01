@@ -1,0 +1,20 @@
+from abc import ABC, abstractmethod
+
+from aiogram import Router
+
+from src.utils import *
+from src.db.database import Database
+
+
+class BaseHandler(ABC):
+    def __init__(self):
+        self.router = Router()
+        self.log = setup_logger()
+        self.db = Database()
+        self.cfg = JSONLoader()
+
+        self.register_handler()
+
+    @abstractmethod
+    def register_handler(self) -> None:
+        pass

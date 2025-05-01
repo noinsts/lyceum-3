@@ -1,0 +1,4 @@
+pandas
+aiogram
+python-dotenv
+pytz
