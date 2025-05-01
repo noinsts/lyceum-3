@@ -4,6 +4,7 @@ from aiogram.enums import ParseMode
 from pytz import timezone
 
 from .base import BaseHandler
+from src.settings.calls import Calls
 
 
 class StudentHandler(BaseHandler):
@@ -21,9 +22,11 @@ class StudentHandler(BaseHandler):
         self.router.message.register(self.today, F.text == '📅 Розклад на сьогодні')
         self.router.message.register(self.tomorrow, F.text == '🌇 Розклад на завтра')
         self.router.message.register(self.next_lesson, F.text == '➡️ Наступний урок')
+        self.router.message.register(self.calls, F.text == '🔔 Розклад дзвінків')
 
 
-    def _generate_schedule_message(self, day_name: str, results: list[tuple[str]], is_tomorrow: bool = False) -> str:
+    @staticmethod
+    def _generate_schedule_message(day_name: str, results: list[tuple[str]], is_tomorrow: bool = False) -> str:
         day_type = "завтра" if is_tomorrow else "сьогодні"
 
         prompt = f"Розклад уроків на {day_type} <b>({day_name.capitalize()})</b>:\n\n"
@@ -90,6 +93,20 @@ class StudentHandler(BaseHandler):
         await message.answer(prompt, parse_mode=ParseMode.HTML)
 
 
-    async def next_lesson(self, message: Message) -> None:
+    @staticmethod
+    async def next_lesson(message: Message) -> None:
         """Обробка кнопки ➡️ Наступний урок"""
-        pass
+        await message.answer("Поки що в розробці 🌚")
+
+
+    @staticmethod
+    async def calls(message: Message) -> None:
+        """Обробник кнопки 🔔 Розклад дзвінків"""
+        data = Calls().CALLS
+
+        prompt = f"🔔 <b>Розклад дзвінків</b>\n\n"
+
+        for date, name in data.items():
+            prompt += f"<b>{date}</b> — {name}\n"
+
+        await message.answer(prompt, parse_mode=ParseMode.HTML)
