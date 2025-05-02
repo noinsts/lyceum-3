@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from aiogram import Router
+from pytz import timezone
 
 from src.utils import *
 from src.db.database import Database
@@ -12,6 +13,7 @@ class BaseHandler(ABC):
         self.log = setup_logger()
         self.db = Database()
         self.cfg = JSONLoader()
+        self.kyiv_tz = timezone("Europe/Kyiv")
 
         self.register_handler()
 

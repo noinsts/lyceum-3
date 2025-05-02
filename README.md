@@ -1,3 +1,5 @@
+[![wakatime](https://wakatime.com/badge/user/5f28d705-3bc8-4138-8151-e12e0f9e9a23/project/8de912d0-8756-4287-b569-1f74298c8169.svg)](https://wakatime.com/badge/user/5f28d705-3bc8-4138-8151-e12e0f9e9a23/project/8de912d0-8756-4287-b569-1f74298c8169)
+
 # Телеграм бот для школи
 
 **Lyceum-3 бот** — це бот створений для учнів та вчителів **Березанського ліцею №3**.

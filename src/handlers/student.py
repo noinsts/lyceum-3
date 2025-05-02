@@ -10,8 +10,6 @@ from src.settings.calls import Calls
 class StudentHandler(BaseHandler):
     def __init__(self):
         super().__init__()
-        self.kyiv_tz = timezone("Europe/Kyiv")
-
         self.WEEKEND_STICKER = "CAACAgEAAxkBAAEOZSxoE3COqmuPY034826sWOvB7WgTQgACjgEAAnY3dj9180psDptQBzYE"
         self.WEEKEND_PROMPT = "Вихідний! Have a rest"
         # '\' для екранізування спец символів MD_V2

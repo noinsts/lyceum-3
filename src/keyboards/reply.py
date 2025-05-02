@@ -41,6 +41,7 @@ class HubMenu(BaseKeyboard):
 class HubTeacher(BaseKeyboard):
     def get_keyboard(self) -> ReplyKeyboardMarkup:
         kb = [
+            [KeyboardButton(text='🚦 Мій пост')],
             [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
             [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
             [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
