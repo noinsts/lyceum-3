@@ -1,11 +1,10 @@
-from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
 
 from .base import BaseHandler
-from src.keyboards.reply import HubMenu
+from src.keyboards.reply import HubMenu, HubTeacher
 from .register import RegisterHandler
 
 
@@ -25,15 +24,17 @@ class CommonHandler(BaseHandler):
                 prompt = (f"👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
                           f"Ви зареєстровані як учень <b>{form}</b> класу.\n\n"
                           f"Якщо хочете змінити дані, використайте команду /register")
+                rm = HubMenu().get_keyboard()
             else:
                 teacher_name = self.db.register.get_teacher_name(user_id)
                 prompt = (f"👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
                           f"Ви зареєстровані як вчитель <b>{teacher_name}</b>\n\n"
                           f"Якщо хочете змінити дані, використайте команду /register")
+                rm = HubTeacher().get_keyboard()
 
             await message.answer(
                 prompt,
-                reply_markup=HubMenu().get_keyboard(),
+                reply_markup=rm,
                 parse_mode=ParseMode.HTML
             )
 
@@ -42,8 +43,9 @@ class CommonHandler(BaseHandler):
             await message.answer(
                 "👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
                 "Будь-ласка, зареєструйтеся, щоб скористатись всіма можливостями бота\n\n"
-                "ps: 📢 Бот неофіційний. Його зробив дефолтний учень, а не адміністрація — тому якщо щось глючить, "
-                "не пишіть завучу xd. (овнер @noinsts)",
+                "📢 Бот неофіційний. Його зробив дефолтний учень, а не адміністрація — тому якщо щось глючить, "
+                "не пишіть завучу xd. (овнер @noinsts)\n\n"
+                "ℹ️ Розклад був отриманий з оф. сайту школи (bnvk.pp.ua)",
                 parse_mode=ParseMode.HTML
             )
             await RegisterHandler().start_register(message, state)

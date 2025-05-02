@@ -39,6 +39,8 @@ class StudentHandler(BaseHandler):
 
     async def today(self, message: Message) -> None:
         """Обробка кнопки 📅 Розклад на сьогодні"""
+        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
+
         user_class = self.db.register.get_class(message.from_user.id)
 
         if not user_class:
@@ -65,6 +67,8 @@ class StudentHandler(BaseHandler):
 
     async def tomorrow(self, message: Message) -> None:
         """Обробка кнопки 🌇 Розклад на завтра"""
+        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
+
         user_class = self.db.register.get_class(message.from_user.id)
 
         if not user_class:
@@ -93,15 +97,17 @@ class StudentHandler(BaseHandler):
         await message.answer(prompt, parse_mode=ParseMode.HTML)
 
 
-    @staticmethod
-    async def next_lesson(message: Message) -> None:
+    async def next_lesson(self, message: Message) -> None:
         """Обробка кнопки ➡️ Наступний урок"""
+        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
+
         await message.answer("Поки що в розробці 🌚")
 
 
-    @staticmethod
-    async def calls(message: Message) -> None:
+    async def calls(self, message: Message) -> None:
         """Обробник кнопки 🔔 Розклад дзвінків"""
+        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
+
         data = Calls().CALLS
 
         prompt = f"🔔 <b>Розклад дзвінків</b>\n\n"

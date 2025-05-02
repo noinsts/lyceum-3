@@ -36,3 +36,19 @@ class HubMenu(BaseKeyboard):
             [KeyboardButton(text='📅 Розклад на сьогодні'), KeyboardButton(text='🌇 Розклад на завтра')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+
+class HubTeacher(BaseKeyboard):
+    def get_keyboard(self) -> ReplyKeyboardMarkup:
+        kb = [
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='ТРИТЫЩИКАЛ❓❓❓ТРИТЫЩИКАЛ❓❓❓ЧТО ТАКОЕ БОМБЕР❓❓❓КАКОЙПУХОВИК❓❓❓')],
+            [KeyboardButton(text='noinsts'), KeyboardButton(text='noinsts')]
+        ]
+        return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)

@@ -1,3 +1,5 @@
+from aiogram import types
+
 class RegisterModel:
     def __init__(self, db_connection):
         self.conn = db_connection.conn
@@ -29,41 +31,50 @@ class RegisterModel:
         result = self.cursor.fetchone()
         return result is not None
 
+    def add_user(self, user_id: int, user_type: str, full_name: str, username: str | None,
+                 form: str | None = None, teacher_name: str | None = None) -> None:
 
-    def add_user(self, user_id: int, user_type: str, form: str | None = None, teacher_name: str | None = None) -> None:
         """
         Додає або оновлює користувача в базі даних.
 
         Args:
             user_id: Унікальний ідентифікатор користувача
             user_type: Тип користувача ('student' або 'teacher')
+            full_name: Повне ім'я користувача (з Telegram)
+            username: Username користувача (може бути None)
             form: Клас учня (None для вчителів)
             teacher_name: ПІБ вчителя (None для учнів)
         """
         # Встановлюємо значення відповідно до типу користувача
         if user_type == 'student':
-            # Для учня - форма класу обов'язкова, ПІБ вчителя - пустий
             teacher_name = None
         elif user_type == 'teacher':
-            # Для вчителя - клас пустий, ПІБ обов'язковий
             form = None
 
-        # Перевіряємо наявність користувача та оновлюємо або додаємо
+        # Якщо користувач вже є — оновлюємо дані
         if self.checker(user_id):
             self.cursor.execute(
                 """
                 UPDATE users
-                SET type = ?, class = ?, teacher_name = ?
+                SET type = ?, class = ?, teacher_name = ?, full_name = ?, username = ?
                 WHERE user_id = ?
                 """,
-                (user_type, form, teacher_name, user_id)
+                (user_type, form, teacher_name, full_name, username, user_id)
             )
         else:
             self.cursor.execute(
                 """
-                INSERT INTO users (user_id, type, class, teacher_name)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO users (user_id, type, class, teacher_name, full_name, username)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (user_id, user_type, form, teacher_name)
+                (user_id, user_type, form, teacher_name, full_name, username)
             )
+        self.conn.commit()
+
+    def update_udata(self, user: types.User):
+        self.cursor.execute("""
+            UPDATE users
+            SET full_name = ?, username = ?
+            WHERE user_id = ?
+        """, (user.full_name, user.username, user.id))
         self.conn.commit()

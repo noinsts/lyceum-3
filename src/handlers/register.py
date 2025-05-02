@@ -5,7 +5,7 @@ from aiogram.enums import ParseMode
 
 from .base import BaseHandler
 from src.utils import RegisterStates
-from src.keyboards.reply import GetType, GetClass, HubMenu
+from src.keyboards.reply import GetType, GetClass, HubMenu, HubTeacher
 
 
 class RegisterHandler(BaseHandler):
@@ -51,7 +51,10 @@ class RegisterHandler(BaseHandler):
         form = data.get('user_class')
 
         # додаємо користувача в бд
-        self.db.register.add_user(message.from_user.id, user_type, form)
+        self.db.register.add_user(
+            message.from_user.id, user_type, message.from_user.full_name,
+            message.from_user.username, form, None
+        )
 
         await state.clear()
         await self.finally_register(message)
@@ -60,6 +63,11 @@ class RegisterHandler(BaseHandler):
     async def get_teacher_name(self, message: Message, state: FSMContext) -> None:
         """Запит в учителя його ПІБ"""
         teacher_name = message.text
+
+        if teacher_name == "Білецька Світлана Володимирівна":
+            await message.answer(f"❌ <b>Помилка, {teacher_name} не доступна в цьому регіоні</b>", parse_mode=ParseMode.HTML)
+            return
+
         await state.update_data(teacher_name=teacher_name)
         await state.set_state(RegisterStates.finally_register)
 
@@ -76,15 +84,18 @@ class RegisterHandler(BaseHandler):
             )
 
         # додаємо користувача в бд
-        self.db.register.add_user(message.from_user.id, user_type, None, teacher_name)
+        self.db.register.add_user(
+            message.from_user.id, user_type, message.from_user.full_name,
+            message.from_user.username, None, teacher_name
+        )
 
         await message.answer("⚠️ <b>Поки що функції для вчителів не працюють, слідкуйте за розробкою</b>", parse_mode=ParseMode.HTML)
 
         await state.clear()
-        await self.finally_register(message)
+        await self.finally_register(message, is_teacher=True)
 
 
-    async def finally_register(self, message: Message) -> None:
+    async def finally_register(self, message: Message, is_teacher: bool = False) -> None:
         """Беремо дані з бд для перевірки, що все записалось"""
 
         user_id = message.from_user.id
@@ -99,6 +110,6 @@ class RegisterHandler(BaseHandler):
             f"<b>Клас:</b> {db_class if db_class else "-"}\n"
             f"<b>ПІБ:</b> {db_teacher_name if db_teacher_name else "-"}\n\n"
             f"❓ Якщо ви зробили одрук, то використайте команду /register для повторної реєстрації",
-            reply_markup=HubMenu().get_keyboard(),
+            reply_markup=HubTeacher().get_keyboard() if is_teacher else HubMenu().get_keyboard(),
             parse_mode=ParseMode.HTML
         )
