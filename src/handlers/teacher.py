@@ -18,6 +18,7 @@ class TeacherHandler(BaseHandler):
         self.router.message.register(self.my_post, F.text == '🚦 Мій пост')
         self.router.message.register(self.lessons_today, F.text == '📅 Класи на сьогодні')
         self.router.message.register(self.all_week, F.text == '📝 Тижневий розклад')
+        self.router.message.register(self.lessons_tomorrow, F.text == '🌅 Розклад на завтра')
 
 
     async def my_post(self, message: Message) -> None:
@@ -57,6 +58,23 @@ class TeacherHandler(BaseHandler):
         )
 
 
+    def _generate_message(self, results, is_tomorrow: bool = False) -> str:
+        day = "завтра" if is_tomorrow else "сьогодні"
+        prompt = f'<b>Список класів на {day}</b>\n\n'
+
+        # TODO: зробить інформацію про ще одного вчителя з яким проходить урок (друга підгрупа)
+        # TODO: робимо перевірку чи є два split(',')
+        # TODO: якщо є, то знаходимо де вчитель != імені вчителя клієнта
+        # TODO: виводимо цю частину teacher в schedule
+
+        for lesson_id, subject, form in results:
+            prompt += f"<b>{lesson_id}</b>: {subject} з {form}\n"
+
+        prompt += "\n<i>Знайшли неточність? Будь-ласка повідомте @noinsts</i>"
+
+        return prompt
+
+
     async def lessons_today(self, message: Message) -> None:
         self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
 
@@ -87,17 +105,44 @@ class TeacherHandler(BaseHandler):
             await message.answer_sticker(self.HAPPY_GUY)
             return
 
-        prompt = '<b>Список класів на сьогодні</b>\n\n'
+        prompt = self._generate_message(results)
 
-        # TODO: зробить інформацію про ще одного вчителя з яким проходить урок (друга підгрупа)
-        # TODO: робимо перевірку чи є два split(',')
-        # TODO: якщо є, то знаходимо де вчитель != імені вчителя клієнта
-        # TODO: виводимо цю частину teacher в schedule
+        await message.answer(
+            prompt,
+            parse_mode=ParseMode.HTML
+        )
 
-        for lesson_id, subject, form in results:
-            prompt += f"<b>{lesson_id}</b>: {subject} з {form}\n"
 
-        prompt += "\n<i>Знайшли неточність? Будь-ласка повідомте @noinsts</i>"
+    async def lessons_tomorrow(self, message: Message) -> None:
+        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
+
+        week_name: int = message.date.astimezone(self.kyiv_tz).weekday() + 1
+
+        # обробка події, якщо день відправлення - вихідний
+        if week_name > 4:
+            await message.answer(self.WEEKEND_PROMPT)
+            await message.answer_sticker(self.WEEKEND_STICKER)
+            return
+
+        week_name: str = self.cfg._config.get(str(week_name))
+        teacher_name = self.db.register.get_teacher_name(message.from_user.id)
+
+        if not teacher_name:
+            await message.answer(
+                "⚠️ <b>Вибачте, вашого імені не ініціалізовано, будь-ласка, "
+                "спробуйте повторно перереєструватись за допомогою команди /register</b>",
+                parse_mode=ParseMode.HTML
+            )
+            return
+
+        results = self.db.teacher.get_lessons_today(teacher_name, week_name)
+
+        if not results:
+            await message.answer("Сьогодні у вас вихідний!")
+            await message.answer_sticker(self.HAPPY_GUY)
+            return
+
+        prompt = self._generate_message(results, is_tomorrow=True)
 
         await message.answer(
             prompt,
