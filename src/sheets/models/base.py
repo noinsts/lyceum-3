@@ -1,0 +1,32 @@
+import os
+from datetime import datetime, time
+
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+
+credentials_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'creds', 'credentials.json')
+
+
+class BaseSheet:
+    def __init__(self, spreadsheet_id: str, range_prefix: str):
+        creds = Credentials.from_service_account_file(
+            filename=credentials_path,
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        self.service = build("sheets", "v4", credentials=creds)
+        self.sheet = self.service.spreadsheets()
+        self.spreadsheet_id = spreadsheet_id
+        self.range_prefix = range_prefix  # напр. "schedule!"
+
+
+    def get_all(self) -> list[list[str]]:
+        result = self.sheet.values().get(
+            spreadsheetId=self.spreadsheet_id,
+            range=f"{self.range_prefix}A2:G"  # Без заголовка
+        ).execute()
+        return result.get("values", [])
+
+
+    def parse_start_time(self, period: str) -> time:
+        start_str = period.split('-')[0]
+        return datetime.strptime(start_str, "%H%M").time()

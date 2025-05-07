@@ -5,7 +5,7 @@ from pytz import timezone
 
 from src.utils import *
 from src.db.database import Database
-
+from src.sheets.connector import Sheet
 
 class BaseHandler(ABC):
     def __init__(self):
@@ -14,6 +14,8 @@ class BaseHandler(ABC):
         self.db = Database()
         self.cfg = JSONLoader()
         self.kyiv_tz = timezone("Europe/Kyiv")
+
+        self.sheet = Sheet()
 
         self.register_handler()
 

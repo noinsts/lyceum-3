@@ -1,7 +1,7 @@
 import sqlite3
 
 # Створюємо з'єднання з базою даних
-conn = sqlite3.connect('db/database.db')
+conn = sqlite3.connect('../../db/database.db')
 cursor = conn.cursor()
 
 # Створюємо таблицю чергових вчителів

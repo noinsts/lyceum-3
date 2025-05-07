@@ -28,6 +28,7 @@ class LyceumBot:
         self.dp.include_router(StudentHandler().router)
         self.dp.include_router(TeacherHandler().router)
         self.dp.include_router(StatsHandler().router)
+        self.dp.include_router(AllHandler().router)
 
 
     async def run(self):

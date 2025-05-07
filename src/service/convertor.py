@@ -17,7 +17,7 @@
 import sqlite3
 
 # Створюємо SQLite базу даних
-conn = sqlite3.connect('db/database.db')
+conn = sqlite3.connect('../../db/database.db')
 cursor = conn.cursor()
 
 # Створюємо таблицю для розкладу

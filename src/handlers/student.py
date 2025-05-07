@@ -1,11 +1,11 @@
 from collections import defaultdict
+from datetime import datetime
 
 from aiogram import F
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 
 from .base import BaseHandler
-from src.settings.calls import Calls
 
 
 class StudentHandler(BaseHandler):
@@ -22,7 +22,6 @@ class StudentHandler(BaseHandler):
         self.router.message.register(self.today, F.text == '📅 Розклад на сьогодні')
         self.router.message.register(self.tomorrow, F.text == '🌇 Розклад на завтра')
         self.router.message.register(self.next_lesson, F.text == '➡️ Наступний урок')
-        self.router.message.register(self.calls, F.text == '🔔 Розклад дзвінків')
         self.router.message.register(self.all_week, F.text == '📝 Розклад на весь тиждень')
         self.router.message.register(self.intresting_button, F.text == '🌎 Цікава кнопка')
 
@@ -66,7 +65,7 @@ class StudentHandler(BaseHandler):
         # перетворення для обчислень в бд
         day_name = self.cfg._config.get(str(day_num))
 
-        results = self.db.student.get_today(day_name, self.db.register.get_class(message.from_user.id))
+        results = self.sheet.student.get_today(day_name, self.db.register.get_class(message.from_user.id))
         prompt = self._generate_schedule_message(day_name, results)
 
         await message.answer(prompt, parse_mode=ParseMode.HTML)
@@ -98,7 +97,7 @@ class StudentHandler(BaseHandler):
         # перетворення дня для бд
         day_num: str = self.cfg._config.get(str(day_num))
 
-        results = self.db.student.get_today(day_num, user_class)
+        results = self.sheet.student.get_today(day_num, user_class)
         prompt = self._generate_schedule_message(day_num, results, is_tomorrow=True)
 
         await message.answer(prompt, parse_mode=ParseMode.HTML)
@@ -107,27 +106,55 @@ class StudentHandler(BaseHandler):
     async def next_lesson(self, message: Message) -> None:
         """Обробка кнопки ➡️ Наступний урок"""
         self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
+        user_class = self.db.register.get_class(message.from_user.id)
 
-        await message.answer("Поки що в розробці 🌚")
+        if not user_class:
+            await message.answer("Вибачте, інформації про вас не знайдено, скористайтесь командою /register")
+            return
 
+        day: int = message.date.astimezone(self.kyiv_tz).weekday()
 
-    async def calls(self, message: Message) -> None:
-        """Обробник кнопки 🔔 Розклад дзвінків"""
-        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
+        if day > 4:
+            await message.answer(self.WEEKEND_PROMPT)
+            await message.answer_sticker(self.WEEKEND_STICKER)
+            return
 
-        data = Calls().CALLS
+        day: str = self.cfg._config.get(str(day))
 
-        prompt = f"🔔 <b>Розклад дзвінків</b>\n\n"
+        time = message.date.astimezone(self.kyiv_tz).time()
 
-        for date, name in data.items():
-            prompt += f"<b>{date}</b> — {name}\n"
+        # time = "08:29:00"
+        #
+        # await message.answer(
+        #     f"DEBUG:\n\n"
+        #     f"{time=}\n"
+        #     f"{day=}"
+        # )
 
-        await message.answer(prompt, parse_mode=ParseMode.HTML)
+        time = datetime.strptime(time, "%H:%M:%S").time()
+
+        results = self.sheet.student.next_lesson(day, user_class, time)
+
+        if not results:
+            await message.answer("На сьогодні все..")
+            await message.answer_sticker(self.WEEKEND_STICKER)
+            return
+
+        l_num, to, subj, teach = results
+
+        await message.answer(
+            f"<b>Наступний урок:</b>\n\n"
+            f"#️⃣ {l_num}\n"
+            f"📄 {subj}\n"
+            f"👨🏻‍🏫 {teach}\n"
+            f"🕗 Урок почнеться через <b>{to.seconds // 60 + to.days * 24 * 60} хв.</b>",
+            parse_mode=ParseMode.HTML
+        )
 
 
     async def all_week(self, message: Message) -> None:
         user_class = self.db.register.get_class(message.from_user.id)
-        results = self.db.student.get_all_week(user_class)
+        results = self.sheet.student.all_week(user_class)
 
         lessons_by_day = defaultdict(list)
 

@@ -11,3 +11,5 @@ class JSONLoader:
 
     def __getattr__(self, name):
         return self._config.get(name)
+
+# TODO: переписать json логіку
