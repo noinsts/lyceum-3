@@ -4,13 +4,18 @@ from datetime import datetime, time
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
-credentials_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'creds', 'credentials.json')
+
+# Ідемо тільки 2 рівні вверх до кореня (lyceum-3)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+# Тепер просто йдемо до creds
+CREDENTIALS_PATH = os.path.join(BASE_DIR, "creds", "credentials.json")
 
 
 class BaseSheet:
     def __init__(self, spreadsheet_id: str, range_prefix: str):
         creds = Credentials.from_service_account_file(
-            filename=credentials_path,
+            filename=CREDENTIALS_PATH,
             scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         self.service = build("sheets", "v4", credentials=creds)

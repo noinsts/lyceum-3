@@ -24,11 +24,11 @@ class StudentHandler(BaseHandler):
         self.router.message.register(self.next_lesson, F.text == '➡️ Наступний урок')
         self.router.message.register(self.all_week, F.text == '📝 Розклад на весь тиждень')
         self.router.message.register(self.intresting_button, F.text == '🌎 Цікава кнопка')
+        self.router.message.register(self.today_shorted, F.text == '❓ Сьогодні скорочені уроки?')
 
 
     async def intresting_button(self, message: Message) -> None:
-        await message.answer("Ааааа. В мене вже голова нічо не соображає. Поможіть. Я пишу бота вже п'яту годину. Я хочу спать. Завтра контрольна з алгебри. Міша не любить Сальникову Галину Григорівну. Вона йому в кошмарах сниться :(")
-        await message.answer_sticker(self.MASHA_SAD)
+        pass
 
 
     @staticmethod
@@ -38,7 +38,7 @@ class StudentHandler(BaseHandler):
         prompt = f"<b>Розклад уроків на {day_type} ({day_name.lower()})</b>:\n\n"
 
         for lesson_id, name, teacher in results:
-            prompt += f"<b>{lesson_id}</b>:\n <b>{name}</b> з {teacher.replace(',', ' та')}\n\n"
+            prompt += f"<b>{lesson_id}</b>: <b>{name}</b> з {teacher.replace(',', ' та')}\n\n"
 
         return prompt
 
@@ -131,7 +131,7 @@ class StudentHandler(BaseHandler):
         #     f"{day=}"
         # )
 
-        time = datetime.strptime(time, "%H:%M:%S").time()
+        # time = datetime.strptime(time, "%H:%M:%S").time()
 
         results = self.sheet.student.next_lesson(day, user_class, time)
 
@@ -146,7 +146,7 @@ class StudentHandler(BaseHandler):
             f"<b>Наступний урок:</b>\n\n"
             f"#️⃣ {l_num}\n"
             f"📄 {subj}\n"
-            f"👨🏻‍🏫 {teach}\n"
+            f"👨🏻‍🏫 {teach.replace(",", " та")}\n"
             f"🕗 Урок почнеться через <b>{to.seconds // 60 + to.days * 24 * 60} хв.</b>",
             parse_mode=ParseMode.HTML
         )
@@ -174,3 +174,7 @@ class StudentHandler(BaseHandler):
             prompt,
             parse_mode=ParseMode.HTML
         )
+
+
+    async def today_shorted(self, message: Message) -> None:
+        await message.answer("Я не знаю")

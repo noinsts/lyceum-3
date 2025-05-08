@@ -98,7 +98,7 @@ class TeacherHandler(BaseHandler):
             )
             return
 
-        results = self.db.teacher.get_lessons_today(teacher_name, week_name)
+        results = self.sheet.teacher.get_lessons_today(week_name, teacher_name)
 
         if not results:
             await message.answer("Сьогодні у вас вихідний!")
@@ -135,10 +135,10 @@ class TeacherHandler(BaseHandler):
             )
             return
 
-        results = self.db.teacher.get_lessons_today(teacher_name, week_name)
+        results = self.sheet.teacher.get_lessons_today(teacher_name, week_name)
 
         if not results:
-            await message.answer("Сьогодні у вас вихідний!")
+            await message.answer("Завтра у вас вихідний!")
             await message.answer_sticker(self.HAPPY_GUY)
             return
 

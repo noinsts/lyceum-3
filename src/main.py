@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from handlers import *
-from utils import setup_logger
+from src.handlers import *
+from src.utils import setup_logger
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
