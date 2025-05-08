@@ -31,14 +31,15 @@ class StudentHandler(BaseHandler):
         pass
 
 
-    @staticmethod
-    def _generate_schedule_message(day_name: str, results: list[tuple[int, str, str]], is_tomorrow: bool = False) -> str:
+    def _generate_schedule_message(self, day_name: str, results: list[tuple[int, str, str]], is_tomorrow: bool = False) -> str:
         day_type = "завтра" if is_tomorrow else "сьогодні"
 
         prompt = f"<b>Розклад уроків на {day_type} ({day_name.lower()})</b>:\n\n"
 
         for lesson_id, name, teacher in results:
-            prompt += f"<b>{lesson_id}</b>: <b>{name}</b> з {teacher.replace(',', ' та')}\n\n"
+            name, teacher = self.wf.student(name, teacher)
+            if name:
+                prompt += f"<b>{lesson_id}</b>: <b>{name}</b> з {teacher.replace(',', ' та')}\n\n"
 
         return prompt
 
@@ -136,11 +137,18 @@ class StudentHandler(BaseHandler):
         results = self.sheet.student.next_lesson(day, user_class, time)
 
         if not results:
-            await message.answer("На сьогодні все..")
+            await message.answer("На сьогодні все...")
             await message.answer_sticker(self.WEEKEND_STICKER)
             return
 
         l_num, to, subj, teach = results
+
+        subj, teach = self.wf.student(subj, teach)
+
+        if not subj:
+            await message.answer("На сьогодні все...")
+            await message.answer_sticker(self.WEEKEND_STICKER)
+            return
 
         await message.answer(
             f"<b>Наступний урок:</b>\n\n"
@@ -168,7 +176,9 @@ class StudentHandler(BaseHandler):
         for day, lessons in lessons_by_day.items():
             prompt += f"\n<b>{day.capitalize()}</b>\n"
             for number, subject, teacher in lessons:
-                prompt += f"<b>{number}</b>: {subject} з {teacher.replace(",", " та")}\n"
+                subject, teacher = self.wf.student(subject, teacher)
+                if subject:
+                    prompt += f"<b>{number}</b>: {subject} з {teacher.replace(",", " та")}\n"
 
         await message.answer(
             prompt,

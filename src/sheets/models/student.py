@@ -6,7 +6,7 @@ from src.utils import JSONLoader
 
 
 class StudentSheet(BaseSheet):
-    def get_today(self, day: str, form: str) -> list[tuple[int, str, str]] | None:
+    def get_today(self, day: str, form: str) -> list[tuple[int, str | None, str | None]] | None:
         all_rows = self.get_all()
         results = []
 
@@ -24,7 +24,7 @@ class StudentSheet(BaseSheet):
         return results
 
 
-    def all_week(self, form: str) -> list[tuple[str, int, str, str]] | None:
+    def all_week(self, form: str) -> list[tuple[str, int, str | None, str | None]] | None:
         results = []
 
         for row in self.get_all():

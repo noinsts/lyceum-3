@@ -14,6 +14,7 @@ class BaseHandler(ABC):
         self.db = Database()
         self.cfg = JSONLoader()
         self.kyiv_tz = timezone("Europe/Kyiv")
+        self.wf = WeekFormat()
 
         self.sheet = Sheet()
 
