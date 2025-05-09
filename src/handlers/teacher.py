@@ -9,7 +9,7 @@ from .base import BaseHandler
 class TeacherHandler(BaseHandler):
     def __init__(self):
         super().__init__()
-        self.WEEKEND_PROMPT = "Сьогодні вихідний! Чому ви думаєте про роботу? Може краще відпочити 🙂‍↕️"
+        self.WEEKEND_PROMPT = "вихідний! Чому ви думаєте про роботу? Може краще відпочити 🙂‍↕️"
         self.WEEKEND_STICKER = "CAACAgIAAxkBAAEOZ1doFUn9Y0TR-qURiQeEb7HZdGC2qQACOjMAAlG5gEjH0Q7wxWFwrDYE"
         self.HAPPY_GUY = "CAACAgIAAxkBAAEOZ1loFUxiV3fJxTbJ0Q6iD6LDAkhsxwACBTgAAp17sEknYmmEwwt6pTYE"
 
@@ -82,7 +82,7 @@ class TeacherHandler(BaseHandler):
 
         # обробка події, якщо день відправлення - вихідний
         if week_name > 4:
-            await message.answer(self.WEEKEND_PROMPT)
+            await message.answer("Сьогодні " + self.WEEKEND_PROMPT)
             await message.answer_sticker(self.WEEKEND_STICKER)
             return
 
@@ -120,7 +120,7 @@ class TeacherHandler(BaseHandler):
 
         # обробка події, якщо день відправлення - вихідний
         if week_name > 4:
-            await message.answer(self.WEEKEND_PROMPT)
+            await message.answer("Завтра " + self.WEEKEND_PROMPT)
             await message.answer_sticker(self.WEEKEND_STICKER)
             return
 

@@ -10,7 +10,7 @@ class TeacherSheet(BaseSheet):
 
             _, day_of_week, lesson_number, _, form, subject, teacher = row[:7]
 
-            if teacher == tn and day_of_week == day:
+            if tn.lower() in teacher.lower() and day_of_week == day:
                 try:
                     results.append((int(lesson_number), subject, form))
                 except ValueError:
