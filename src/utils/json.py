@@ -12,4 +12,13 @@ class JSONLoader:
     def __getattr__(self, name):
         return self._config.get(name)
 
+    def get_next_day(self, current_day: str) -> str | None:
+        days = list(self._config.values())
+        try:
+            index = days.index(current_day)
+            next_index = (index + 1) % len(days)
+            return days[next_index]
+        except ValueError:
+            return None
+
 # TODO: переписать json логіку

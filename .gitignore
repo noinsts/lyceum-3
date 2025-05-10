@@ -1,5 +1,6 @@
 /.venv
 /.idea
+/db
 *.db
 *.log
 /src/creds

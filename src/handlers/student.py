@@ -114,14 +114,7 @@ class StudentHandler(BaseHandler):
             return
 
         day: int = message.date.astimezone(self.kyiv_tz).weekday()
-
-        if day > 4:
-            await message.answer(self.WEEKEND_PROMPT)
-            await message.answer_sticker(self.WEEKEND_STICKER)
-            return
-
         day: str = self.cfg._config.get(str(day))
-
         time = message.date.astimezone(self.kyiv_tz).time()
 
         # time = "08:29:00"
@@ -135,27 +128,20 @@ class StudentHandler(BaseHandler):
         # time = datetime.strptime(time, "%H:%M:%S").time()
 
         results = self.sheet.student.next_lesson(day, user_class, time)
-
-        if not results:
-            await message.answer("На сьогодні все...")
-            await message.answer_sticker(self.WEEKEND_STICKER)
-            return
-
-        l_num, to, subj, teach = results
-
+        get_day, l_num, to, subj, teach = results
         subj, teach = self.wf.student(subj, teach)
 
-        if not subj:
-            await message.answer("На сьогодні все...")
-            await message.answer_sticker(self.WEEKEND_STICKER)
-            return
+        prompt = [
+            "<b>Наступний урок:</b>",
+            "",
+            f"#️⃣ {l_num} у {get_day.lower()}" if get_day != day else f"#️⃣ {l_num}",
+            f"📄 {subj}",
+            f"👨🏻‍🏫 {teach}",
+            f"🕗 {self.tf.format_time_until(to)}"
+        ]
 
         await message.answer(
-            f"<b>Наступний урок:</b>\n\n"
-            f"#️⃣ {l_num}\n"
-            f"📄 {subj}\n"
-            f"👨🏻‍🏫 {teach.replace(",", " та")}\n"
-            f"🕗 Урок почнеться через <b>{to.seconds // 60 + to.days * 24 * 60} хв.</b>",
+            "\n".join(prompt),
             parse_mode=ParseMode.HTML
         )
 
