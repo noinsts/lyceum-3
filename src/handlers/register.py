@@ -76,9 +76,7 @@ class RegisterHandler(BaseHandler):
         """Запит в учителя його ПІБ"""
         teacher_name = message.text
 
-        if teacher_name == "Білецька Світлана Володимирівна":
-            await message.answer(f"❌ <b>Помилка, {teacher_name} не доступна в цьому регіоні</b>", parse_mode=ParseMode.HTML)
-            return
+        # TODO: Biletska guard
 
         # TODO: створити список всіх вчителів та перевірити чи є введене ім'я в списку
 
