@@ -23,3 +23,6 @@ class BaseHandler(ABC):
     @abstractmethod
     def register_handler(self) -> None:
         pass
+
+    def get_router(self) -> Router:
+        return self.router

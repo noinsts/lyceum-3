@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, time
+from typing import List
 
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
@@ -24,7 +25,7 @@ class BaseSheet:
         self.range_prefix = range_prefix  # напр. "schedule!"
 
 
-    def get_all(self) -> list[list[str]]:
+    def get_all(self) -> List[List[str]]:
         result = self.sheet.values().get(
             spreadsheetId=self.spreadsheet_id,
             range=f"{self.range_prefix}A2:G"  # Без заголовка

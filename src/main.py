@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from flask import Flask
 from pyngrok import ngrok
 
-from src.handlers import *
+from src.handlers import get_all_router
 from src.utils import setup_logger
 
 load_dotenv()
@@ -23,16 +23,7 @@ class LyceumBot:
         self.dp = Dispatcher(storage=self.storage)
         self.log = setup_logger()
 
-        self.register_handlers()
-
-
-    def register_handlers(self):
-        self.dp.include_router(CommonHandler().router)
-        self.dp.include_router(RegisterHandler().router)
-        self.dp.include_router(StudentHandler().router)
-        self.dp.include_router(TeacherHandler().router)
-        self.dp.include_router(StatsHandler().router)
-        self.dp.include_router(AllHandler().router)
+        self.dp.include_router(get_all_router())
 
 
     async def run(self):

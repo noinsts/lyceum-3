@@ -26,8 +26,10 @@ $$/   $$/  $$$$$$/  $$/ $$/   $$/ $$$$$$$/     $$$$/ $$$$$$$/
 if __name__ == "__main__":
     print(ascii_art)
     
+    """
     server = FlaskServer(port=8080)
     server.run_in_background()
-
+    """
+    
     bot = LyceumBot()
     asyncio.run(bot.run())

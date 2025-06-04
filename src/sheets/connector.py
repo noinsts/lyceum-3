@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 from src.sheets.models import *
@@ -9,6 +10,8 @@ SHEET_ID = os.getenv("SHEET_ID")
 
 class Sheet:
     def __init__(self):
+        """Ініціалізація модель бд"""
+
         self.student = StudentSheet(
             spreadsheet_id=SHEET_ID,
             range_prefix="schedule!"

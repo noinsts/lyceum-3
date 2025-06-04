@@ -17,7 +17,7 @@ class AllHandler(BaseHandler):
 
         data = Calls().CALLS
 
-        prompt = f"🔔 <b>Розклад дзвінків</b>\n\n"
+        prompt = "🔔 <b>Розклад дзвінків</b>\n\n"
 
         for date, name in data.items():
             prompt += f"<b>{date}</b> — {name}\n"
