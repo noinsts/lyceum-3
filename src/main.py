@@ -1,11 +1,20 @@
-import os
+"""
+O magna Salnikova, munda peccata nostra, et veni ad nos, clamor noster auditur.
+"""
+
+"""
+йобаний насос, я ніхуя в цьому коду не понімаю
+хто це блять писав
+"""
+
 import asyncio
+import os
 import socket
 from threading import Thread
 
-from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from dotenv import load_dotenv
 from flask import Flask
 from pyngrok import ngrok
 

@@ -23,6 +23,7 @@ class BaseSheet:
         self.sheet = self.service.spreadsheets()
         self.spreadsheet_id = spreadsheet_id
         self.range_prefix = range_prefix  # напр. "schedule!"
+        self.LENGTH_SHEET = 7
 
 
     def get_all(self) -> List[List[str]]:

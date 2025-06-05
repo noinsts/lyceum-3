@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List, Tuple, Optional
 import datetime
 
 from .base import BaseSheet
@@ -6,32 +6,46 @@ from src.utils import JSONLoader
 
 
 class StudentSheet(BaseSheet):
-    def get_today(self, day: str, form: str) -> list[tuple[int, str | None, str | None]] | None:
-        all_rows = self.get_all()
-        results = []
+    LENGTH_SHEET = 7
 
-        for row in all_rows:
-            if len(row) < 7:
-                continue
+    
+    def get_lessons(self, form: str, day: Optional[str] = None) -> List[Tuple] | None:
 
-            lesson_id, day_of_week, lesson_number, time_period, sheet_form, subject, teacher = row[:7]
-            if day_of_week == day and sheet_form == form:
-                try:
-                    results.append((int(lesson_number), subject, teacher))
-                except ValueError:
-                    continue
+        """
+        Повертає розклад для вказаного класу.
 
-        return results
+        Якщо вказано день — повертає розклад тільки на цей день.
+        Інакше — повертає розклад на весь тиждень, відсортований по днях та номерах уроків.
 
+        Args:
+            form (str): клас (наприклад, "10-А")
+            day (Optional[str], optional): день тижня (наприклад, "MONDAY"). За замовчуванням — None.
 
-    def all_week(self, form: str) -> list[tuple[str, int, str | None, str | None]] | None:
+        Returns:
+            List[Tuple]: список кортежів з інформацією про уроки.
+                - Якщо day вказаний: [(номер_уроку, предмет, вчитель), ...]
+                - Якщо day не вказаний: [(день, номер_уроку, предмет, вчитель), ...]
+        """
+
         results = []
 
         for row in self.get_all():
-            if len(row) < 7:
+            if len(row) < self.LENGTH_SHEET:
                 continue
 
-            _, day_of_week, lesson_number, _, sheet_form, subject, teacher = row[:7]
+            (
+                _, 
+                day_of_week, 
+                lesson_number, 
+                _, 
+                sheet_form, 
+                subject, 
+                teacher
+            ) = row[:7]
+
+            if day is not None and day.upper() != day_of_week.upper():
+                # перевіряємо день в бд тільки за умови того, що він вказаний в аргументах
+                continue
 
             if sheet_form != form:
                 continue
@@ -40,11 +54,21 @@ class StudentSheet(BaseSheet):
                 results.append((day_of_week, int(lesson_number), subject, teacher))
             except ValueError:
                 continue
-
+                
+        if day is not None:
+            # опрацьовуємо варіант пошуку за днем
+            # відкидуємо з кортежа інформацію про день
+            return [(lesson_number, subject, teacher) for (_, lesson_number, subject, teacher) in results]
+        
+        # сортування для обробки розкладу на тиждень
         results.sort(key=lambda r: (JSONLoader()._config.get(str(r[0].upper()), 99), r[1]))
-
         return results
 
+        
+    """
+    дальше бога нет.
+    (та документації теж)
+    """
 
     def next_lesson(self, day: str, form: str, time: datetime.time) -> tuple[str, str, int | Any, str, str]:
         today = datetime.date.today()
