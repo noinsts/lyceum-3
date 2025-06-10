@@ -45,7 +45,8 @@ class HubTeacher(BaseKeyboard):
         kb = [
             [KeyboardButton(text='🚦 Мій пост'), KeyboardButton(text='📅 Класи на сьогодні')],
             [KeyboardButton(text='📝 Тижневий розклад'), KeyboardButton(text='🌅 Розклад на завтра')],
-            [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='❓ Сьогодні скорочені уроки?')]
+            [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='❓ Сьогодні скорочені уроки?')],
+            [KeyboardButton(text='⏰ Кількість академічних годин')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 

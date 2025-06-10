@@ -5,6 +5,7 @@ from aiogram import Router
 from .all_week import AllWeekHandler
 from .my_post import MyPostHandler
 from .lessons_by_day import LessonsTodayHandler, LessonsTomorrowHandler
+from .academy_time import AcademyTime
 
 
 def get_teacher_router() -> List[Router]:
@@ -14,5 +15,6 @@ def get_teacher_router() -> List[Router]:
         AllWeekHandler().get_router(),
         MyPostHandler().get_router(),
         LessonsTodayHandler().get_router(),
-        LessonsTomorrowHandler().get_router()
+        LessonsTomorrowHandler().get_router(),
+        AcademyTime().get_router()
     ]

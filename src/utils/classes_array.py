@@ -7,3 +7,5 @@ class ClassesArray:
                "8-Б", "9-А", "9-Б", "10-А", "10-Б", "11-А", "11-Б"]
 
 classes = ClassesArray()
+
+# TODO: перемістить цей файл в src/settings
