@@ -5,6 +5,7 @@ from aiogram.enums import ParseMode
 
 from .base import BaseHandler
 from src.keyboards.reply import HubMenu, HubTeacher
+from src.keyboards.inline import HubAdmin
 from .register import RegisterHandler
 from src.settings.admins import Admins
 
@@ -18,7 +19,7 @@ class CommonHandler(BaseHandler):
         """Обробник команди start"""
         user_id = message.from_user.id
 
-        if user_id in Admins().ADMINDS:
+        if user_id in Admins().ADMINS:
             await message.answer(
                 "<b>👋 Вітаємо в чат-боті Березанського ліцею №3!</b>\n\n"
                 "Ви зареєстровані як <b>адміністратор ЗЗСО</b>. Тепер ви можете:\n\n"
@@ -26,7 +27,8 @@ class CommonHandler(BaseHandler):
                 "• надсилати оголошення учням та вчителям;\n"
                 "• заплановувати наради.\n\n"
                 "📽 Щоб ознайомитися з роботою бота, будь ласка, перегляньте відео нижче.",
-                parse_mode=ParseMode.HTML
+                parse_mode=ParseMode.HTML,
+                reply_markup=HubAdmin().get_keyboard()
             )
             return
 
