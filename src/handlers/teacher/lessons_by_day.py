@@ -27,7 +27,7 @@ class GenerateMessage:
             await message.answer_sticker("CAACAgIAAxkBAAEOZ1doFUn9Y0TR-qURiQeEb7HZdGC2qQACOjMAAlG5gEjH0Q7wxWFwrDYE")
             return
         
-        day_name: str = JSONLoader()._config.get(str(day_num))
+        day_name: str = JSONLoader("settings/ukranian_weekname.json").get(str(day_num))
 
         results = Sheet().teacher.get_lessons(tn, day_name)
 

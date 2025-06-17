@@ -12,7 +12,7 @@ class BaseHandler(ABC):
         self.router = Router()
         self.log = setup_logger()
         self.db = Database()
-        self.cfg = JSONLoader()
+        self.ukr_wn = JSONLoader("settings/ukranian_weekname.json")
         self.kyiv_tz = timezone("Europe/Kyiv")
         self.wf = WeekFormat()
         self.tf = TimeFormat()

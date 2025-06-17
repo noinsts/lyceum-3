@@ -54,5 +54,5 @@ class TeacherSheet(BaseSheet):
         
         # в разі пошуку за тижнем
         # сортуємо для обробки розкладу на тиждень
-        results.sort(key=lambda r: (JSONLoader()._config.get(str(r[0].upper()), 99), r[1]))
+        results.sort(key=lambda r: (JSONLoader("settings/ukranian_weekname.json").get(str(r[0].upper()), 99), r[1]))
         return results

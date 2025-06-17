@@ -1,5 +1,6 @@
 from aiogram import Router
 
+from .all import get_a_router
 from .student import get_student_router
 from .teacher import get_teacher_router
 from .admin import get_admin_router
@@ -9,6 +10,9 @@ from .common import CommonHandler
 
 def get_all_router() -> Router:
     main_router = Router()
+
+    for router in get_a_router():
+        main_router.include_router(router)
 
     for router in get_student_router():
         main_router.include_router(router)

@@ -61,7 +61,7 @@ class StudentSheet(BaseSheet):
             return [(lesson_number, subject, teacher) for (_, lesson_number, subject, teacher) in results]
         
         # сортування для обробки розкладу на тиждень
-        results.sort(key=lambda r: (JSONLoader()._config.get(str(r[0].upper()), 99), r[1]))
+        results.sort(key=lambda r: (JSONLoader("settings/ukranian_weekname.json").get(str(r[0].upper()), 99), r[1]))
         return results
 
         
@@ -70,7 +70,7 @@ class StudentSheet(BaseSheet):
     (та документації теж)
     """
 
-    def next_lesson(self, day: str, form: str, time: datetime.time) -> tuple[str, str, int | Any, str, str]:
+    def next_lesson(self, day: str, form: str, time: datetime.time) -> tuple[str, int | Any, str, str]:
         today = datetime.date.today()
         now_dt = datetime.datetime.combine(today, time)
 
@@ -84,9 +84,9 @@ class StudentSheet(BaseSheet):
                 start_time = self.parse_start_time(time_period)
                 lesson_dt = datetime.datetime.combine(today, start_time)
                 if lesson_dt > now_dt:
-                    return day, lesson_number, lesson_dt - now_dt, subject, teacher
+                    return lesson_number, lesson_dt - now_dt, subject, teacher
         """Рекурсивно викликаємо функцію в випадку, якщо не знайдено жодного уроку"""
-        day = JSONLoader().get_next_day(day)
+        day = JSONLoader("settings/ukranian_weekname.json").get_next_day(day)
         day = "ПОНЕДІЛОК" if not day else day
         return self.get_first_lesson(day, form, time)
 
@@ -104,8 +104,7 @@ class StudentSheet(BaseSheet):
         except ValueError:
             return None
 
-
-    def get_first_lesson(self, day: str, form: str, time: datetime.time) -> tuple[str, str, int | Any, str, str]:
+    def get_first_lesson(self, day: str, form: str, time: datetime.time) -> tuple[str, int | Any, str, str]:
         today = datetime.date.today()
         now_dt = datetime.datetime.combine(today, time)
 
@@ -120,4 +119,4 @@ class StudentSheet(BaseSheet):
                 lesson_date = self.get_date_from_day_string(day_of_week)
                 if lesson_date:
                     lesson_dt = datetime.datetime.combine(lesson_date, start_time)
-                    return day, lesson_number, lesson_dt - now_dt, subject, teacher
+                    return lesson_number, lesson_dt - now_dt, subject, teacher

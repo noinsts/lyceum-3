@@ -3,7 +3,7 @@ from aiogram.types import Message
 from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
-from src.settings.calls import Calls
+from settings.calls import Calls
 
 class CallsHandler(BaseHandler):
     def register_handler(self):

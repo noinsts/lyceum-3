@@ -12,7 +12,6 @@ class AcademyTime(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.academy_time, F.text == '⏰ Кількість академічних годин')
 
-
     async def academy_time(self, message: Message) -> None:
         """
         Обробка кнопки "⏰ Кількість академічних годин"

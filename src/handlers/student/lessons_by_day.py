@@ -40,7 +40,7 @@ class GenerateMessage:
             await message.answer_sticker("CAACAgEAAxkBAAEOZSxoE3COqmuPY034826sWOvB7WgTQgACjgEAAnY3dj9180psDptQBzYE")
             return
         
-        day_name = JSONLoader()._config.get(str(day_num))
+        day_name = JSONLoader("settings/ukranian_weekname.json").get(str(day_num))
         results = Sheet().student.get_lessons(form, day_name)
 
         if not results:

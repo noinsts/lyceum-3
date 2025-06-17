@@ -29,7 +29,7 @@ class NextLessonHandler(BaseHandler):
             await message.answer_sticker(self.WEEKEND_STICKER)
             return
 
-        day: str = self.cfg._config.get(str(day))
+        day: str = self.ukr_wn.get(str(day))
 
         time = message.date.astimezone(self.kyiv_tz).time()
 

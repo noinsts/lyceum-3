@@ -7,7 +7,7 @@ from .base import BaseHandler
 from src.keyboards.reply import HubMenu, HubTeacher
 from src.keyboards.inline import HubAdmin
 from .register import RegisterHandler
-from src.settings.admins import Admins
+from settings.admins import Admins
 
 
 class CommonHandler(BaseHandler):

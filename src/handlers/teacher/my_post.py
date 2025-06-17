@@ -33,7 +33,7 @@ class MyPostHandler(BaseHandler):
             await message.answer_sticker(self.WEEKEND_STICKER)
             return
 
-        week_name: str = self.cfg._config.get(str(week_name))
+        week_name: str = self.ukr_wn.get(str(week_name))
         teacher_name = self.db.register.get_teacher_name(message.from_user.id)
 
         if not teacher_name:
