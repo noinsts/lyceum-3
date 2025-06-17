@@ -5,6 +5,7 @@ from aiogram import Router
 from .announcement_hub import AnnouncementHub
 from .students_change_schedule import StudentsChangeSchedule
 from .teachers_change_schedule import TeachersChangeSchedule
+from .meeting import Meeting
 
 
 def get_admin_router() -> List[Router]:
@@ -12,5 +13,6 @@ def get_admin_router() -> List[Router]:
     return [
         AnnouncementHub().get_router(),
         StudentsChangeSchedule().get_router(),
-        TeachersChangeSchedule().get_router()
+        TeachersChangeSchedule().get_router(),
+        Meeting().get_router()
     ]

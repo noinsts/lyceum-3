@@ -6,3 +6,7 @@ class RegisterStates(StatesGroup):
     waiting_for_class = State()
     waiting_for_teacher_name = State()
     finally_register = State()
+
+
+class TeacherTypesStates(StatesGroup):
+    choosing_teacher = State()
