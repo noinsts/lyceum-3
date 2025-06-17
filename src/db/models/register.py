@@ -78,3 +78,7 @@ class RegisterModel:
             WHERE user_id = ?
         """, (user.full_name, user.username, user.id))
         self.conn.commit()
+
+    def teacher_checker(self, teacher_name: str) -> bool:
+        self.cursor.execute("SELECT 1 FROM teacher_qualification WHERE teacher_name = ?", (teacher_name, ))
+        return bool(self.cursor.fetchone())
