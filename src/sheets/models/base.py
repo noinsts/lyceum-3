@@ -25,7 +25,6 @@ class BaseSheet:
         self.range_prefix = range_prefix  # напр. "schedule!"
         self.LENGTH_SHEET = 7
 
-
     def get_all(self) -> List[List[str]]:
         result = self.sheet.values().get(
             spreadsheetId=self.spreadsheet_id,
@@ -33,6 +32,12 @@ class BaseSheet:
         ).execute()
         return result.get("values", [])
 
+    def get_all_new(self) -> List[List[str]]:
+        result = self.sheet.values().get(
+            spreadsheetId=self.spreadsheet_id,
+            range="templateDemo"
+        ).execute()
+        return result.get("values", [])
 
     def parse_start_time(self, period: str) -> time:
         start_str = period.split('-')[0]

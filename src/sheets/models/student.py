@@ -8,9 +8,7 @@ from src.utils import JSONLoader
 class StudentSheet(BaseSheet):
     LENGTH_SHEET = 7
 
-    
-    def get_lessons(self, form: str, day: Optional[str] = None) -> List[Tuple] | None:
-
+    def get_lessons(self, form: str, day: Optional[str] = None) -> List[Tuple]:
         """
         Повертає розклад для вказаного класу.
 
@@ -27,44 +25,69 @@ class StudentSheet(BaseSheet):
                 - Якщо day не вказаний: [(день, номер_уроку, предмет, вчитель), ...]
         """
 
+        data = self.get_all_new()
+
+        # обробка помилки завантаження даних
+        if not data or len(data) < 5:
+            return []
+
+        # масив, що повернеться користувачу
         results = []
 
-        for row in self.get_all():
-            if len(row) < self.LENGTH_SHEET:
-                continue
+        # імена вчителів
+        header = data[2]
 
-            (
-                _, 
-                day_of_week, 
-                lesson_number, 
-                _, 
-                sheet_form, 
-                subject, 
-                teacher
-            ) = row[:7]
+        # день, який оброблюється
+        curr_day = None
 
-            if day is not None and day.upper() != day_of_week.upper():
-                # перевіряємо день в бд тільки за умови того, що він вказаний в аргументах
-                continue
+        # проходимось по розкладу (з 4 рядку)
+        for row in data[3:]:
+            # оновлюємо день
+            if len(row) > 0 and row[0].strip():
+                curr_day = row[0].strip().upper()
 
-            if sheet_form != form:
+            # якщо день заданий, то можливо він не заданий
+            if day is not None and curr_day != day.upper():
                 continue
 
             try:
-                results.append((day_of_week, int(lesson_number), subject, teacher))
-            except ValueError:
+                lesson_number = int(float(row[1]))
+            except (IndexError, ValueError):
                 continue
-                
-        if day is not None:
-            # опрацьовуємо варіант пошуку за днем
-            # відкидуємо з кортежа інформацію про день
-            return [(lesson_number, subject, teacher) for (_, lesson_number, subject, teacher) in results]
-        
-        # сортування для обробки розкладу на тиждень
-        results.sort(key=lambda r: (JSONLoader("settings/ukranian_weekname.json").get(str(r[0].upper()), 99), r[1]))
+
+            # проходимось по всіх колонках з вчителями
+            for col_index in range(2, len(row)):
+                try:
+                    cell_value = row[col_index] if col_index < len(row) else ""
+
+                    # скіпаємо порожні клітинки
+                    if not cell_value.strip():
+                        continue
+
+                    if ", " in cell_value:
+                        # Очікується: "10-А, Математика"
+                        parts = cell_value.split(", ", maxsplit=1)
+                        subject = parts[1] if len(parts) > 1 else parts[0]
+                    else:
+                        subject = cell_value
+                except (IndexError, ValueError):
+                    continue
+
+                if form.strip().lower() in cell_value.strip().lower():
+                    teacher = header[col_index] if col_index < len(header) and header[col_index] else "Невідомо"
+
+                    if day:
+                        results.append((lesson_number, subject, teacher))
+                    else:
+                        results.append((curr_day, lesson_number, subject, teacher))
+
+        # обробка сортування розкладу на тиждень
+        if not day:
+            week_order = JSONLoader("settings/ukranian_weekname.json")
+            results.sort(key=lambda r: (week_order.get(str(r[0].upper()), 99), r[1]))
+
         return results
 
-        
     """
     дальше бога нет.
     (та документації теж)
@@ -90,8 +113,8 @@ class StudentSheet(BaseSheet):
         day = "ПОНЕДІЛОК" if not day else day
         return self.get_first_lesson(day, form, time)
 
-
-    def get_date_from_day_string(self, day_string: str) -> datetime.date | None:
+    @staticmethod
+    def get_date_from_day_string(day_string: str) -> datetime.date | None:
         today = datetime.date.today()
         days_of_week = ["ПОНЕДІЛОК", "ВІВТОРОК", "СЕРЕДА", "ЧЕТВЕР", "П'ЯТНИЦЯ", "СУБОТА", "НЕДІЛЯ"]
         try:
@@ -117,6 +140,10 @@ class StudentSheet(BaseSheet):
             if day_of_week == day and sheet_form == form:
                 start_time = self.parse_start_time(time_period)
                 lesson_date = self.get_date_from_day_string(day_of_week)
-                if lesson_date:
-                    lesson_dt = datetime.datetime.combine(lesson_date, start_time)
-                    return lesson_number, lesson_dt - now_dt, subject, teacher
+
+                if not lesson_date:
+                    continue
+
+                lesson_dt = datetime.datetime.combine(lesson_date, start_time)
+
+                return lesson_number, lesson_dt - now_dt, subject, teacher
