@@ -44,6 +44,22 @@ class TeacherTypes(BaseKeyboard):
 
 
 class SubmitKeyboard(BaseKeyboard):
+    def get_keyboard(self, submit_cb: str = "submit", cancel_cb: str ="cancel") -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='✅ Так, підтвердити', callback_data=submit_cb)],
+            [InlineKeyboardButton(text='❌ Ні, почати заповнювати наново', callback_data=cancel_cb)]
+        ]
+
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class TeacherOlympHub(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='Створити нову олімпіаду', callback_data='create_new_olymp')],
+            [InlineKeyboardButton(text='Редагувати наявну', callback_data='edit_olymp')],
+            [InlineKeyboardButton(text='Видалити', callback_data='delete_olymp')],
+            [InlineKeyboardButton(text='Список олімпіад', callback_data='list_olymps')]
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
             [InlineKeyboardButton(text='✅ Так, підтвердити', callback_data='submit')],

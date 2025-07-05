@@ -11,5 +11,19 @@ class Schema:
                 type TEXT NOT NULL CHECK(type IN ('teacher', 'student')),
                 class TEXT,
                 teacher_name TEXT
+                teacher_name TEXT,
+                student_name TEXT
+            )"""
+        )
+
+        self.cursor.execute(
+            """CREATE TABLE IF NOT EXISTS olymps (
+                form TEXT NOT NULL,
+                student_name TEXT NOT NULL,
+                teacher_name TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                stage_olymp TEXT NOT NULL,
+                date TEXT NOT NULL,
+                note TEXT
             )"""
         )

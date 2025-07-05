@@ -1,6 +1,7 @@
 from .base import DatabaseConnection
 from .models import *
 
+
 class Database:
     def __init__(self):
         self.connection = DatabaseConnection()
@@ -8,6 +9,7 @@ class Database:
         self.register = RegisterModel(self.connection)
         self.student = StudentModel(self.connection)
         self.teacher = TeacherModel(self.connection)
+        self.olymp = OlympsModel(self.connection)
 
     def close(self):
         self.connection.close()
