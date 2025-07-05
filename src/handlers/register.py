@@ -12,6 +12,12 @@ from src.keyboards.reply import GetType, GetClass, HubMenu, HubTeacher
 from src.utils import classes
 
 
+USER_TYPE_PRETTY = {
+    "student": "Учень",
+    "teacher": "Вчитель"
+}
+
+
 class UserType(str, Enum):
     STUDENT = "👨‍🎓 Учень"
     TEACHER = "👨‍🏫 Вчитель"
@@ -74,7 +80,8 @@ class RegisterHandler(BaseHandler):
                 await message.answer("Будь ласка, оберіть варіант, натиснувши на кнопку 👇")
                 return
 
-    def normalize_class(self, raw: str) -> str | None:
+    @staticmethod
+    def normalize_class(raw: str) -> str | None:
         """Валідуємо формат класу: цифра (1–12) + українська літера (А–Я)"""
 
         match = re.match(r"^(\d{1,2})[- ]?([А-ЯІЇЄҐ])$", raw.strip().upper())
@@ -111,7 +118,7 @@ class RegisterHandler(BaseHandler):
             return
 
         # перевірка класу чи є він в школі
-        if not user_class in classes.CLASSES:
+        if user_class not in classes.CLASSES:
             await message.answer("Такого класу в нас немає. Може, перевірите ще раз? 🤔")
             return
 
@@ -187,7 +194,7 @@ class RegisterHandler(BaseHandler):
         # створюємо промпт повідомлення
         msg = (
             f"✅ <b>Успіх! Дані успішно записані!</b>\n\n"
-            f"<b>Тип:</b> {user_type}\n"
+            f"<b>Тип:</b> {USER_TYPE_PRETTY.get(user_type, user_type)}\n"
         )
         if user_type == "student":
             msg += f"<b>Клас:</b> {user_class}\n"
@@ -199,7 +206,7 @@ class RegisterHandler(BaseHandler):
         await message.answer(
             msg,
             reply_markup=HubTeacher().get_keyboard()
-            if user_type == UserType.TEACHER
+            if user_type == "teacher"
             else HubMenu().get_keyboard(),
             parse_mode=ParseMode.HTML
         )
