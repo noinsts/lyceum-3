@@ -6,6 +6,7 @@ from .teacher import get_teacher_router
 from .admin import get_admin_router
 from .register import RegisterHandler
 from .common import CommonHandler
+from .docs_callbacks import get_docs_routers
 
 
 def get_all_router() -> Router:
@@ -21,6 +22,9 @@ def get_all_router() -> Router:
         main_router.include_router(router)
 
     for router in get_admin_router():
+        main_router.include_router(router)
+
+    for router in get_docs_routers():
         main_router.include_router(router)
 
     main_router.include_router(RegisterHandler().get_router())
