@@ -82,3 +82,34 @@ class RegisterModel:
     def teacher_checker(self, teacher_name: str) -> bool:
         self.cursor.execute("SELECT 1 FROM teacher_qualification WHERE teacher_name = ?", (teacher_name, ))
         return bool(self.cursor.fetchone())
+
+    def teacher_is_verif(self, user_id: int, teacher_name: str) -> bool:
+        """Getter верифікації вчителя"""
+        self.cursor.execute("""
+            SELECT is_verified 
+            FROM teachers_verification
+            WHERE user_id = ? AND teacher_name = ?
+        """, (user_id, teacher_name))
+        return bool(self.cursor.fetchone())
+
+    def teacher_is_exists(self, user_id: int) -> str | None:
+        """Перевірка наявності вчителя за user_id"""
+        self.cursor.execute("""
+            SELECT teacher_name
+            FROM teachers_verification
+            WHERE user_id = ?
+        """, (user_id, ))
+
+        results = self.cursor.fetchone()
+        return results[0] if results else None
+
+    def add_verif_teacher(self, user_id: int, teacher_name: str) -> None:
+        """Setter верифікації вчителя"""
+        self.cursor.execute("""
+            INSERT INTO teachers_verification (user_id, teacher_name, is_verified)
+            VALUES (?, ?, 1)
+            ON CONFLICT(user_id) DO UPDATE SET 
+                teacher_name = EXCLUDED.teacher_name,
+                is_verified = 1
+        """, (user_id, teacher_name))
+        self.conn.commit()

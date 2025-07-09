@@ -63,3 +63,24 @@ class TeacherOlympHub(BaseKeyboard):
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class DeveloperHub(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='Turn on khaos mode', callback_data="dev_khaos_on")],
+            [InlineKeyboardButton(text='Access teacher account', callback_data="dev_access_hub")]
+        ]
+
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class DeveloperAccessHub(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='Add', callback_data='dev_access_add')],
+            [InlineKeyboardButton(text='Block', callback_data='dev_access_block')],
+            [InlineKeyboardButton(text='List', callback_data='dev_access_list')]
+        ]
+
+        return InlineKeyboardMarkup(inline_keyboard=kb)

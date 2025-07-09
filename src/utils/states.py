@@ -10,3 +10,22 @@ class RegisterStates(StatesGroup):
 
 class TeacherTypesStates(StatesGroup):
     choosing_teacher = State()
+
+
+class StudentOlympsStates(StatesGroup):
+    waiting_for_name = State()
+
+
+class CreateOlympStates(StatesGroup):
+    waiting_for_subject = State()
+    waiting_for_form = State()
+    waiting_for_student_name = State()
+    waiting_for_olymp_stage = State()
+    waiting_for_date = State()
+    waiting_for_note = State()
+    confirm_creating = State()
+
+
+class DevAddAccess(StatesGroup):
+    waiting_for_data = State()
+    waiting_for_confirmation = State()
