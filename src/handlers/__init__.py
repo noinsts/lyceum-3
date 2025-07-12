@@ -11,8 +11,7 @@ from .docs_callbacks import get_docs_routers
 def get_all_router() -> Router:
     main_router = Router()
 
-    for router in get_a_router():
-        main_router.include_router(router)
+    main_router.include_router(get_a_router())
 
     for router in get_student_router():
         main_router.include_router(router)
