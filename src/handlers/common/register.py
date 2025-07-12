@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
-from .base import BaseHandler
+from src.handlers.base import BaseHandler
 from src.utils import RegisterStates
 from src.keyboards.reply import GetType, GetClass, HubMenu, HubTeacher
 from src.utils import classes
@@ -99,6 +99,8 @@ class RegisterHandler(BaseHandler):
 
         # Приводимо клас до формату: 9-А → 9-А (з дефісом та великою літерою)
         return f"{int(match.group(1))}-{match.group(2)}"
+
+        # TODO: винести в src/utils/
 
     async def get_class(self, message: Message, state: FSMContext) -> None:
         """Обробляє введення класу, перевіряє формат, вікове обмеження та наявність класу в базі"""

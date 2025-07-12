@@ -3,15 +3,15 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
 
-from .base import BaseHandler
+from src.handlers.base import BaseHandler
 from src.keyboards.reply import HubMenu, HubTeacher
 from src.keyboards.inline import HubAdmin, DeveloperHub
-from .register import RegisterHandler
+from src.handlers.common.register import RegisterHandler
 from settings.admins import Admins
 from settings.developers import Developers
 
 
-class CommonHandler(BaseHandler):
+class StartHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.start_cmd, CommandStart())
 
@@ -60,7 +60,7 @@ class CommonHandler(BaseHandler):
 
             if user_id in admins:
                 await message.answer(
-                    "👑 Панель андміністратора ввікмнена.",
+                    "👑 Панель адміністратора ввімкнена.",
                     reply_markup=HubAdmin().get_keyboard()
                 )
 
