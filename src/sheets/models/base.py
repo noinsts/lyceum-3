@@ -6,8 +6,8 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 
-# Ідемо тільки 2 рівні вверх до кореня (lyceum-3)
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Ідемо тільки 3 рівні вверх до кореня (lyceum-3)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 # Тепер просто йдемо до creds
 CREDENTIALS_PATH = os.path.join(BASE_DIR, "creds", "credentials.json")
