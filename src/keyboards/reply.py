@@ -5,6 +5,7 @@ from src.utils import classes
 
 """Registration"""
 
+
 class GetType(BaseKeyboard):
     def get_keyboard(self) -> ReplyKeyboardMarkup:
         kb = [
@@ -29,6 +30,7 @@ class GetClass(BaseKeyboard):
 
 """HUB"""
 
+
 class HubMenu(BaseKeyboard):
     def get_keyboard(self) -> ReplyKeyboardMarkup:
         kb = [
@@ -46,7 +48,7 @@ class HubTeacher(BaseKeyboard):
             [KeyboardButton(text='🚦 Мій пост'), KeyboardButton(text='📅 Класи на сьогодні')],
             [KeyboardButton(text='📝 Тижневий розклад'), KeyboardButton(text='🌅 Розклад на завтра')],
             [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='❓ Сьогодні скорочені уроки?')],
-            [KeyboardButton(text='⏰ Кількість академічних годин')]
+            [KeyboardButton(text='⏰ Кількість академічних годин'), KeyboardButton(text='🚀 Хаб олімпіад')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 
@@ -57,3 +59,23 @@ class HubStats(BaseKeyboard):
             [KeyboardButton(text='Статистика зареєстрованих учасників по класах')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+
+class SkipButton(BaseKeyboard):
+    def get_keyboard(self) -> ReplyKeyboardMarkup:
+        kb = [
+            [KeyboardButton(text='🚫 Пропустити')]
+        ]
+
+        return ReplyKeyboardMarkup(keyboard=kb)
+
+
+class OlympStages(BaseKeyboard):
+    def get_keyboard(self) -> ReplyKeyboardMarkup:
+        kb = [
+            [KeyboardButton(text='Міська')],
+            [KeyboardButton(text='Обласна')],
+            [KeyboardButton(text='Всеукраїнська')]
+        ]
+
+        return ReplyKeyboardMarkup(keyboard=kb)

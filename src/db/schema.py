@@ -10,7 +10,6 @@ class Schema:
                 username TEXT NOT NULL,
                 type TEXT NOT NULL CHECK(type IN ('teacher', 'student')),
                 class TEXT,
-                teacher_name TEXT
                 teacher_name TEXT,
                 student_name TEXT
             )"""
@@ -25,5 +24,13 @@ class Schema:
                 stage_olymp TEXT NOT NULL,
                 date TEXT NOT NULL,
                 note TEXT
+            )"""
+        )
+
+        self.cursor.execute(
+            """CREATE TABLE IF NOT EXISTS teachers_verification (
+                user_id INTEGER PRIMARY KEY,
+                teacher_name TEXT NOT NULL,
+                is_verified INTEGER CHECK (is_verified IN (0, 1)) DEFAULT 0 
             )"""
         )
