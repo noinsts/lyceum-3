@@ -1,7 +1,8 @@
+from typing import List
+
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 from .base import BaseKeyboard
-from src.utils import classes
 
 """Registration"""
 
@@ -15,13 +16,13 @@ class GetType(BaseKeyboard):
 
 
 class GetClass(BaseKeyboard):
-    def get_keyboard(self) -> ReplyKeyboardMarkup:
+    def get_keyboard(self, classes: List | None = None) -> ReplyKeyboardMarkup:
         keyboard_buttons = []
         row = []
 
-        for i, class_name in enumerate(classes.CLASSES):
+        for i, class_name in enumerate(classes):
             row.append(KeyboardButton(text=class_name))
-            if len(row) == 3 or i == len(classes.CLASSES) - 1:
+            if len(row) == 3 or i == len(classes) - 1:
                 keyboard_buttons.append(row)
                 row = []
 
@@ -37,7 +38,8 @@ class HubMenu(BaseKeyboard):
             [KeyboardButton(text='➡️ Наступний урок'), KeyboardButton(text='🔔 Розклад дзвінків')],
             [KeyboardButton(text='📅 Розклад на сьогодні'), KeyboardButton(text='🌇 Розклад на завтра')],
             [KeyboardButton(text='📝 Розклад на весь тиждень'), KeyboardButton(text='🌎 Цікава кнопка')],
-            [KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='❓ Сьогодні скорочені уроки?')]
+            [KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='❓ Сьогодні скорочені уроки?')],
+            [KeyboardButton(text='🤓 Олімпіади')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 
@@ -47,7 +49,8 @@ class HubTeacher(BaseKeyboard):
         kb = [
             [KeyboardButton(text='🚦 Мій пост'), KeyboardButton(text='📅 Класи на сьогодні')],
             [KeyboardButton(text='📝 Тижневий розклад'), KeyboardButton(text='🌅 Розклад на завтра')],
-            [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='❓ Сьогодні скорочені уроки?')],
+            [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='🌐 Ресурси школи'),
+             KeyboardButton(text='❓ Сьогодні скорочені уроки?')],
             [KeyboardButton(text='⏰ Кількість академічних годин'), KeyboardButton(text='🚀 Хаб олімпіад')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)

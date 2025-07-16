@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from ...base import BaseHandler
 from src.utils import parse_hub_keyboard
 from src.utils.states import CreateOlympStates
-from src.keyboards.reply import SkipButton, OlympStages
+from src.keyboards.reply import SkipButton, OlympStages, GetClass
 from src.keyboards.inline import SubmitKeyboard
 from src.responses import TeacherVerify
 
@@ -105,8 +105,14 @@ class CreateHandler(BaseHandler):
         await state.update_data(subject=message.text.strip())
         await state.set_state(CreateOlympStates.waiting_for_form)
 
+        teacher_name = self.db.register.get_teacher_name(message.from_user.id)
+        forms = self.sheet.teacher.my_classes(teacher_name)
+
+        # TODO: додати обробку помилок forms на None
+
         await message.answer(
-            "Добре, оберіть клас зі списку нижче, <b>поки це не працює, тож просто введіть його</b>",
+            "Добре, оберіть клас зі списку нижче",
+            reply_markup=GetClass().get_keyboard(forms),
             parse_mode=ParseMode.HTML
         )
 

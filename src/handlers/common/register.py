@@ -63,7 +63,10 @@ class RegisterHandler(BaseHandler):
             case UserType.STUDENT.value:
                 await state.update_data(user_type="student")
                 await state.set_state(RegisterStates.waiting_for_class)
-                await message.answer("Зі списку нижче оберіть ваш клас", reply_markup=GetClass().get_keyboard())
+                await message.answer(
+                    "Зі списку нижче оберіть ваш клас",
+                    reply_markup=GetClass().get_keyboard(classes.CLASSES)
+                )
 
             case UserType.TEACHER.value:
                 await state.update_data(user_type='teacher')
@@ -73,8 +76,8 @@ class RegisterHandler(BaseHandler):
             case UserType.CMD_START.value:
                 await state.clear()
                 # імпорт в середині циклу задля уникнення циклічного імпорту
-                from src.handlers.common import CommonHandler
-                await CommonHandler().start_cmd(message, state)
+                from .start import StartHandler
+                await StartHandler().start_cmd(message, state)
 
             case _:
                 await message.answer("Будь ласка, оберіть варіант, натиснувши на кнопку 👇")
