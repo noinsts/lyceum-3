@@ -3,6 +3,6 @@
 /db
 *.db
 *.log
-/src/creds
+/creds
 *.pyc
 .env
