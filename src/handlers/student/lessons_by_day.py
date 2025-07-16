@@ -65,7 +65,6 @@ class LessonsTodayHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.today, F.text == '📅 Розклад на сьогодні')
 
-
     async def today(self, message: Message) -> None:
         user_class = self.db.register.get_class(message.from_user.id)
         await GenerateMessage.send(message, user_class, offset=0, tz=self.kyiv_tz, wf=self.wf)
@@ -74,7 +73,6 @@ class LessonsTodayHandler(BaseHandler):
 class LessonsTomorrowHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.tomorrow, F.text == '🌇 Розклад на завтра')
-
 
     async def tomorrow(self, message: Message) -> None:
         user_class = self.db.register.get_class(message.from_user.id)

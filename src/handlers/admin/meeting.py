@@ -74,3 +74,4 @@ class Meeting(BaseHandler):
 
         # TODO: прописать підтвердження
         # для цього є inline клавіатура SubmitKeyboard
+        # FIXME: зробить backend
