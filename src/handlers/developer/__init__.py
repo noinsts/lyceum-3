@@ -1,7 +1,7 @@
 from aiogram import Router
 
 from .access import get_access_routers
-# from src.middlewares import DeveloperCheckerMiddleware
+from src.middlewares import RoleAccessMiddleware
 
 
 def get_dev_routers() -> Router:
@@ -11,7 +11,7 @@ def get_dev_routers() -> Router:
     for r in get_access_routers():
         router.include_router(r)
 
-    # router.message.middleware(DeveloperCheckerMiddleware())
-    # router.callback_query.middleware(DeveloperCheckerMiddleware())
+    router.message.middleware(RoleAccessMiddleware.for_developers())
+    router.callback_query.middleware(RoleAccessMiddleware.for_developers())
 
     return router
