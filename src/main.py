@@ -21,6 +21,7 @@ from pyngrok import ngrok
 from src.handlers import get_all_router
 from src.utils import setup_logger
 from src.db.db import create_db
+from src.middlewares import DBMiddleware
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -32,6 +33,10 @@ class LyceumBot:
         self.storage = MemoryStorage()
         self.dp = Dispatcher(storage=self.storage)
         self.log = setup_logger()
+
+        # підключення database middleware
+        self.dp.message.middleware(DBMiddleware())
+        self.dp.callback_query.middleware(DBMiddleware())
 
         self.dp.include_router(get_all_router())
 
