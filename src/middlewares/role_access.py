@@ -4,7 +4,8 @@ from aiogram import BaseMiddleware
 from aiogram.types import Message, CallbackQuery
 
 from src.enums import UserType, DBUserType
-from src.db.database import Database
+from src.db.db import session_maker
+from src.db.connector import DBConnector
 from settings.developers import Developers
 from settings.admins import Admins
 from src.utils import setup_logger
@@ -16,12 +17,10 @@ class RoleAccessMiddleware(BaseMiddleware):
     def __init__(
             self,
             user_type: UserType,
-            database: Optional[Database] = None,
             developers: Optional[Developers] = None,
             admins: Optional[Admins] = None
     ):
         self.user_type = user_type
-        self.database = database or Database()
         self.developers = developers or Developers()
         self.admins = admins or Admins()
 
@@ -60,11 +59,14 @@ class RoleAccessMiddleware(BaseMiddleware):
             case _:
                 return False
 
-    async def _check_db_user_type(self, user_id: int, expected_type: DBUserType) -> bool:
+    @staticmethod
+    async def _check_db_user_type(user_id: int, expected_type: DBUserType) -> bool:
         """Перевіряє тип користувача в БД"""
         try:
-            db_user_type = self.database.register.get_type(user_id)
-            return db_user_type == expected_type
+            async with session_maker() as session:
+                db = DBConnector(session)
+                db_user_type = await db.register.get_user_type(user_id)
+                return db_user_type == expected_type
         except Exception as e:
             logger.warning(f"Failed to get user type for {user_id}: {e}")
             return False
