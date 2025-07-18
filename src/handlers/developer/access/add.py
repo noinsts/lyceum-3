@@ -5,6 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
+from src.db.connector import DBConnector
 from ...base import BaseHandler
 from src.utils.states import DevAddAccess
 from src.keyboards.inline import SubmitKeyboard
@@ -57,7 +58,7 @@ class AddAccessHandler(BaseHandler):
 
         await state.set_state(DevAddAccess.waiting_for_data)
 
-    async def collect_data(self, message: Message, state: FSMContext) -> None:
+    async def collect_data(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Валідуємо дані від користувача"""
         if not message.text:
             await message.answer("⚠️ Будь ласка, введіть текстові дані")
@@ -95,7 +96,7 @@ class AddAccessHandler(BaseHandler):
         )
 
         try:
-            existing_teacher = self.db.register.teacher_is_exists(int(lines[0]))
+            existing_teacher = await db.verification.get_name(int(user_id))
 
             if existing_teacher:
                 prompt = (
@@ -175,7 +176,7 @@ class AddAccessHandler(BaseHandler):
             )
 
         # Перевірка на заборонені символи
-        if not re.match(r'^[а-яА-ЯёЁa-zA-Z\s\'\-]+$', teacher_name):
+        if not re.match(r"^[а-щА-ЩЬьЮюЯяІіЇїЄєҐґA-Za-z\s'\-]+$", teacher_name):
             return "⚠️ <b>Ім'я вчителя має містити тільки літери, пробіли, апостроф або дефіс</b>"
 
         # Перевірка на тільки пробіли
@@ -184,7 +185,7 @@ class AddAccessHandler(BaseHandler):
 
         return None
 
-    async def submit(self, callback: CallbackQuery, state: FSMContext) -> None:
+    async def submit(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
         """Обробка callback погодження"""
         await callback.answer()
 
@@ -194,7 +195,7 @@ class AddAccessHandler(BaseHandler):
             teacher_name = data.get("teacher_name")
 
             # відправляємо дані до БД
-            self.db.register.add_verif_teacher(user_id, teacher_name)
+            await db.verification.add_verif_teacher(user_id, teacher_name)
 
             await callback.message.answer(
                 "✅ <b>Успішно</b>\n\n"
