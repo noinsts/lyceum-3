@@ -5,6 +5,7 @@ from aiogram.enums import ParseMode
 from ..base import BaseHandler
 from src.utils import JSONLoader
 from src.sheets.connector import Sheet
+from src.db.connector import DBConnector
 
 
 class GenerateMessage:
@@ -65,8 +66,8 @@ class LessonsTodayHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.today, F.text == '📅 Розклад на сьогодні')
 
-    async def today(self, message: Message) -> None:
-        user_class = self.db.register.get_class(message.from_user.id)
+    async def today(self, message: Message, db: DBConnector) -> None:
+        user_class = await db.register.get_form(message.from_user.id)
         await GenerateMessage.send(message, user_class, offset=0, tz=self.kyiv_tz, wf=self.wf)
 
 
@@ -74,6 +75,6 @@ class LessonsTomorrowHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.tomorrow, F.text == '🌇 Розклад на завтра')
 
-    async def tomorrow(self, message: Message) -> None:
-        user_class = self.db.register.get_class(message.from_user.id)
+    async def tomorrow(self, message: Message, db: DBConnector) -> None:
+        user_class = await db.register.get_form(message.from_user.id)
         await GenerateMessage.send(message, user_class, offset=1, tz=self.kyiv_tz, wf=self.wf)
