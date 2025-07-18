@@ -6,13 +6,14 @@ from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
 from src.utils import WeekFormat
+from src.db.connector import DBConnector
 
 
 class AcademyTime(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.academy_time, F.text == '⏰ Кількість академічних годин')
 
-    async def academy_time(self, message: Message) -> None:
+    async def academy_time(self, message: Message, db: DBConnector) -> None:
         """
         Обробка кнопки "⏰ Кількість академічних годин"
 
@@ -23,7 +24,7 @@ class AcademyTime(BaseHandler):
             Академічні години для кожного дня та для всього тижня
         """
 
-        tn = self.db.register.get_teacher_name(message.from_user.id)
+        tn = await db.register.get_teacher_name(message.from_user.id)
         results = self.sheet.teacher.get_lessons(tn)
 
         count_by_day = defaultdict(int)

@@ -13,6 +13,8 @@ from src.utils.states import CreateOlympStates
 from src.keyboards.reply import SkipButton, OlympStages, GetClass
 from src.keyboards.inline import SubmitKeyboard
 from src.responses import TeacherVerify
+from src.db.connector import DBConnector
+from src.db.schemas import AddOlymp
 
 
 class CreateHandler(BaseHandler):
@@ -73,16 +75,16 @@ class CreateHandler(BaseHandler):
             CreateOlympStates.confirm_creating
         )
 
-    def is_verif(self, user_id: int) -> bool:
-        """Перевіряє, чи верифікований вчитель"""
-        teacher_name = self.db.register.get_teacher_name(user_id)
-        return self.db.register.teacher_is_verif(user_id, teacher_name)
-
-    async def handler(self, callback: CallbackQuery, state: FSMContext) -> None:
+    async def handler(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
         """Початковий хендлер для створення олімпіади"""
         await callback.answer("")
 
-        if self.is_verif(callback.from_user.id):
+        # Перевірка верифікації
+        teacher_name = await db.register.get_teacher_name(callback.from_user.id)
+        verif = await db.verification.is_verif(callback.from_user.id, teacher_name)
+
+        if verif:
+            await state.update_data(teacher_name=teacher_name)
             await self._start_olympiad_creation(callback, state)
         else:
             await TeacherVerify.send_msg(callback)
@@ -105,7 +107,8 @@ class CreateHandler(BaseHandler):
         await state.update_data(subject=message.text.strip())
         await state.set_state(CreateOlympStates.waiting_for_form)
 
-        teacher_name = self.db.register.get_teacher_name(message.from_user.id)
+        data = await state.get_data()
+        teacher_name = data.get("teacher_name")
         forms = self.sheet.teacher.my_classes(teacher_name)
 
         # TODO: додати обробку помилок forms на None
@@ -166,7 +169,9 @@ class CreateHandler(BaseHandler):
             )
             return
 
-        await state.update_data(date=message.text)
+        date = self._parse_date(message.text)
+
+        await state.update_data(date=date)
         await state.set_state(CreateOlympStates.waiting_for_note)
 
         await message.answer(
@@ -197,16 +202,16 @@ class CreateHandler(BaseHandler):
             parse_mode=ParseMode.HTML
         )
 
-    async def submit(self, callback: CallbackQuery, state: FSMContext) -> None:
+    async def submit(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
         await callback.answer("")
 
         try:
             data = await state.get_data()
-            await self._create_olympiad(callback.from_user.id, data)
+            await self._create_olympiad(data, db)
 
             await callback.message.answer(
                 "✅ Олімпіаду успішно створено.",
-                reply_markup=parse_hub_keyboard(callback.from_user.id)
+                reply_markup=await parse_hub_keyboard(callback.from_user.id)
             )
 
         except Exception as e:
@@ -257,6 +262,10 @@ class CreateHandler(BaseHandler):
             return False
 
     @staticmethod
+    def _parse_date(date_str: str) -> datetime.strptime:
+        return datetime.strptime(date_str, "%d-%m-%Y").date()
+
+    @staticmethod
     def _format_confirmation_text(data: dict) -> str:
         """Форматує текст підтвердження"""
         return (
@@ -270,15 +279,26 @@ class CreateHandler(BaseHandler):
             f"<i>все вірно?</i>"
         )
 
-    async def _create_olympiad(self, user_id: int, data: dict) -> None:
+    @staticmethod
+    async def _create_olympiad(data: dict, db: DBConnector) -> None:
         """Створення олімпіади в базі даних"""
         form = data.get("form")
         student_names = data.get("student_name").split(", ")
-        teacher_name = self.db.register.get_teacher_name(user_id)
+        teacher_name = data.get("teacher_name")
         subject = data.get("subject")
         stage_olymp = data.get("olymp_stage")
         date = data.get("date")
         note = data.get("note")
 
         for student in student_names:
-            self.db.olymp.add_member(form, student, teacher_name, subject, stage_olymp, date, note)
+            await db.olymp.add_member(
+                AddOlymp(
+                    form=form,
+                    student_name=student,
+                    teacher_name=teacher_name,
+                    subject=subject,
+                    stage_olymp=stage_olymp,
+                    date=date,
+                    note=note
+                )
+            )
