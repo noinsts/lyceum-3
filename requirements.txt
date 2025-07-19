@@ -12,3 +12,4 @@ pyngrok
 sqlalchemy
 psycopg2-binary
 asyncpg
+pydantic

@@ -10,7 +10,7 @@ async def parse_hub_keyboard(user_id: int) -> ReplyKeyboardMarkup:
     async with session_maker() as session:
         db = DBConnector(session)
 
-        user_type = await db.register.get_type(user_id)
+        user_type = await db.register.get_user_type(user_id)
 
         match user_type:
             case DBUserType.STUDENT:
