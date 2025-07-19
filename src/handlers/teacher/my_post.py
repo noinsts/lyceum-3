@@ -1,8 +1,12 @@
+# FIXME: не працює
+
 from aiogram import F
 from aiogram.enums import ParseMode
 from aiogram.types import Message
 
 from ..base import BaseHandler
+from src.db.connector import DBConnector
+
 
 class MyPostHandler(BaseHandler):
     def __init__(self):
@@ -12,18 +16,15 @@ class MyPostHandler(BaseHandler):
         self.WEEKEND_STICKER = "CAACAgIAAxkBAAEOZ1doFUn9Y0TR-qURiQeEb7HZdGC2qQACOjMAAlG5gEjH0Q7wxWFwrDYE"
         self.HAPPY_GUY = "CAACAgIAAxkBAAEOZ1loFUxiV3fJxTbJ0Q6iD6LDAkhsxwACBTgAAp17sEknYmmEwwt6pTYE"
 
-
     def register_handler(self) -> None:
-        self.router.message.register(self.my_post, F.text == '🚦 Мій пост')
+        # self.router.message.register(self.my_post, F.text == '🚦 Мій пост')
+        pass
 
-
-    async def my_post(self, message: Message) -> None:
+    async def my_post(self, message: Message, db: DBConnector) -> None:
         """Обробник кнопки 🚦 Мій пост"""
 
         # FIXME: перенести таблицю з постами в google sheet
         # TODO: додати ще колонку з інформацієї де саме знаходиться пост, це можна побачить біля інформатичного
-
-        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
 
         week_name: int = message.date.astimezone(self.kyiv_tz).weekday()
 
@@ -34,7 +35,7 @@ class MyPostHandler(BaseHandler):
             return
 
         week_name: str = self.ukr_wn.get(str(week_name))
-        teacher_name = self.db.register.get_teacher_name(message.from_user.id)
+        teacher_name = await db.register.get_teacher_name(message.from_user.id)
 
         if not teacher_name:
             await message.answer(

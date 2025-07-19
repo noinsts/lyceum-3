@@ -1,11 +1,9 @@
-from .register import RegisterModel
-from .student import StudentModel
-from .teacher import TeacherModel
-from .olymps import OlympsModel
+from .olymp import OlympModel
+from .users import UserModel
+from .verification import TeacherVerificationModel
 
 __all__ = [
-    "RegisterModel",
-    "StudentModel",
-    "TeacherModel",
-    "OlympsModel"
+    "OlympModel",
+    "UserModel",
+    "TeacherVerificationModel"
 ]

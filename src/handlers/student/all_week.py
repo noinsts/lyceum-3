@@ -6,18 +6,19 @@ from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
 from src.utils import JSONLoader
+from src.db.connector import DBConnector
 
 
 class AllWeekHandler(BaseHandler):
     def register_handler(self):
         self.router.message.register(self.all_week, F.text == '📝 Розклад на весь тиждень')
 
-    async def all_week(self, message: Message) -> None:
+    async def all_week(self, message: Message, db: DBConnector) -> None:
         """
         Обробка відправлення студенту розкладу на весь тиждень
         """
 
-        user_class = self.db.register.get_class(message.from_user.id)
+        user_class = await db.register.get_form(message.from_user.id)
         results = self.sheet.student.get_lessons(user_class)
 
         # сортуємо по днях

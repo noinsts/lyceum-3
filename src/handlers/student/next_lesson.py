@@ -4,6 +4,9 @@ from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
 
+from src.db.connector import DBConnector
+
+
 class NextLessonHandler(BaseHandler):
     def __init__(self):
         super().__init__()
@@ -13,10 +16,9 @@ class NextLessonHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.next_lesson, F.text == '➡️ Наступний урок')
 
-    async def next_lesson(self, message: Message) -> None:
+    async def next_lesson(self, message: Message, db: DBConnector) -> None:
         """Обробка кнопки ➡️ Наступний урок"""
-        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
-        user_class = self.db.register.get_class(message.from_user.id)
+        user_class = await db.register.get_form(message.from_user.id)
 
         if not user_class:
             await message.answer("Вибачте, інформації про вас не знайдено, скористайтесь командою /register")

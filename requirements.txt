@@ -9,3 +9,7 @@ google-auth
 google-auth-oauthlib
 flask
 pyngrok
+sqlalchemy
+psycopg2-binary
+asyncpg
+pydantic

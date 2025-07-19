@@ -1,3 +1,5 @@
+# FIXME: додати логіку з нової sheet
+
 from collections import defaultdict
 
 from aiogram import F
@@ -5,14 +7,16 @@ from aiogram.types import Message
 from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
+from src.db.connector import DBConnector
 
 
 class AllWeekHandler(BaseHandler):
     def register_handler(self):
-        self.router.message.register(self.all_week, F.text == '📝 Тижневий розклад')
+        pass
+        # self.router.message.register(self.all_week, F.text == '📝 Тижневий розклад')
 
-    async def all_week(self, message: Message) -> None:
-        tn = self.db.register.get_teacher_name(message.from_user.id)
+    async def all_week(self, message: Message, db: DBConnector) -> None:
+        tn = await db.register.get_teacher_name(message.from_user.id)
         results = self.db.teacher.get_all_week(tn)
 
         by_day = defaultdict(list)

@@ -4,20 +4,18 @@ from aiogram import Router
 from pytz import timezone
 
 from src.utils import *
-from src.db.database import Database
 from src.sheets.connector import Sheet
+
 
 class BaseHandler(ABC):
     def __init__(self):
         self.router = Router()
         self.log = setup_logger()
-        self.db = Database()
         self.ukr_wn = JSONLoader("settings/ukranian_weekname.json")
         self.kyiv_tz = timezone("Europe/Kyiv")
         self.wf = WeekFormat()
         self.tf = TimeFormat()
         self.sheet = Sheet()
-
         self.register_handler()
 
     @abstractmethod

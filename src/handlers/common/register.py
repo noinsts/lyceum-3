@@ -6,10 +6,12 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
+from src.db.connector import DBConnector
+from src.db.schemas import AddUserSchema
 from src.handlers.base import BaseHandler
-from src.utils import RegisterStates
+from src.utils import RegisterStates, classes, parse_hub_keyboard
 from src.keyboards.reply import GetType, GetClass, HubMenu, HubTeacher
-from src.utils import classes
+from src.enums import DBUserType
 
 
 USER_TYPE_PRETTY = {
@@ -46,6 +48,11 @@ class RegisterHandler(BaseHandler):
         )
 
         self.router.message.register(
+            self.get_student_name,
+            RegisterStates.waiting_for_student_name
+        )
+
+        self.router.message.register(
             self.finally_register,
             RegisterStates.finally_register
         )
@@ -57,11 +64,11 @@ class RegisterHandler(BaseHandler):
         await state.set_state(RegisterStates.waiting_for_type)
 
     @staticmethod
-    async def get_type(message: Message, state: FSMContext) -> None:
+    async def get_type(message: Message, state: FSMContext, db: DBConnector) -> None:
         """Обробляє вибір типу користувача та переводить FSM на відповідний state"""
         match message.text:
             case UserType.STUDENT.value:
-                await state.update_data(user_type="student")
+                await state.update_data(user_type=DBUserType.STUDENT)
                 await state.set_state(RegisterStates.waiting_for_class)
                 await message.answer(
                     "Зі списку нижче оберіть ваш клас",
@@ -69,7 +76,7 @@ class RegisterHandler(BaseHandler):
                 )
 
             case UserType.TEACHER.value:
-                await state.update_data(user_type='teacher')
+                await state.update_data(user_type=DBUserType.TEACHER)
                 await state.set_state(RegisterStates.waiting_for_teacher_name)
                 await message.answer("Будь ласка, вкажіть ваше ПІП (повністю)", reply_markup=ReplyKeyboardRemove())
 
@@ -77,7 +84,7 @@ class RegisterHandler(BaseHandler):
                 await state.clear()
                 # імпорт в середині циклу задля уникнення циклічного імпорту
                 from .start import StartHandler
-                await StartHandler().start_cmd(message, state)
+                await StartHandler().start_cmd(message, state, db)
 
             case _:
                 await message.answer("Будь ласка, оберіть варіант, натиснувши на кнопку 👇")
@@ -105,17 +112,17 @@ class RegisterHandler(BaseHandler):
 
         # TODO: винести в src/utils/
 
-    async def get_class(self, message: Message, state: FSMContext) -> None:
+    async def get_class(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Обробляє введення класу, перевіряє формат, вікове обмеження та наявність класу в базі"""
-        user_class = self.normalize_class(message.text)
+        form = self.normalize_class(message.text)
 
         # Якщо введено клас у неправильному форматі
-        if not user_class:
+        if not form:
             await message.answer("А якщо по чесному? Вводь щось типу '9-A' 😉")
             return
 
         # Якщо клас нижче 5 — користувачу ще рано в Telegram 😅
-        if int(user_class.split("-")[0]) < 5:
+        if int(form.split("-")[0]) < 5:
             await message.answer(
                 "Вам дуже мало років для телеграму\n"
                 "Будь ласка, видаліть його і не згадуйте до 5-го класу 🌱"
@@ -123,34 +130,49 @@ class RegisterHandler(BaseHandler):
             return
 
         # перевірка класу чи є він в школі
-        if user_class not in classes.CLASSES:
+        if form not in classes.CLASSES:
             await message.answer("Такого класу в нас немає. Може, перевірите ще раз? 🤔")
             return
 
         # Зберігаємо оброблені дані в машині станів (FSM)
-        await state.update_data(user_class=user_class)
+        await state.update_data(form=form)
+        await state.set_state(RegisterStates.waiting_for_student_name)
+
+        # відправляємо feedback
+        await message.answer("Добре, тепер введіть ваше прізвище та ім'я, наприклад: Лепський Артем")
+
+    async def get_student_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
+        student_name = message.text
+
+        # TODO: додати валідатори та парсери student_name
+
+        await state.update_data(student_name=student_name)
         await state.set_state(RegisterStates.finally_register)
 
         # Запускаємо фінальний етап вручну (переведення не через кнопку, а через код)
-        await self.finally_register(message, state)
+        await self.finally_register(message, state, db)
 
-    async def get_teacher_name(self, message: Message, state: FSMContext) -> None:
+    async def get_teacher_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Запит в учителя його ПІП"""
         teacher_name = message.text
 
         # TODO: Biletska guard
 
+        # TODO: зробить teacher checker
+
         # Якщо введений ПІП не належить до списку вчителів школи
-        if not self.db.register.teacher_checker(teacher_name):
-            await message.answer(
-                "🚫 Такого ПІП немає в нашому списку вчителів. "
-                "Можливо, ви ввели з помилкою або ще не додані до бази.\n"
-                "Спробуйте ще раз або зверніться до @noinsts 👨‍💻"
-            )
-            return
+        # if not self.db.register.teacher_checker(teacher_name):
+        #     await message.answer(
+        #         "🚫 Такого ПІП немає в нашому списку вчителів. "
+        #         "Можливо, ви ввели з помилкою або ще не додані до бази.\n"
+        #         "Спробуйте ще раз або зверніться до @noinsts 👨‍💻"
+        #     )
+        #     return
+
+        # TODO: зробить тут
 
         # інформацію про наявих користувачів в бд
-        if self.db.register.clone_teacher(teacher_name):
+        if await db.register.clone_teacher(teacher_name):
             await message.answer(
                 "💥 <b>Зверніть увагу, хтось з таким ім'я вже зареєстрований. "
                 "Це не завадить вам користуватись проектом, "
@@ -175,25 +197,30 @@ class RegisterHandler(BaseHandler):
         )
 
         # Запускаємо фінальний етап вручну (переведення не через кнопку, а через код)
-        await self.finally_register(message, state)
+        await self.finally_register(message, state, db)
 
-    async def finally_register(self, message: Message, state: FSMContext) -> None:
+    @staticmethod
+    async def finally_register(message: Message, state: FSMContext, db: DBConnector) -> None:
         """Фінал реєстрації: запис у базу, показ підтвердження та меню користувача"""
 
         # отримуємо інформацію
         data = await state.get_data()
         user_type = data.get("user_type")
-        user_class = data.get("user_class")
+        form = data.get("form")
         teacher_name = data.get("teacher_name")
+        student_name = data.get("student_name")
 
         # записуємо інфу в бд
-        self.db.register.add_user(
-            message.from_user.id,
-            user_type,
-            message.from_user.full_name,
-            message.from_user.username,
-            user_class,
-            teacher_name
+        await db.register.add_user(
+            AddUserSchema(
+                user_id=int(message.from_user.id),
+                full_name=message.from_user.full_name,
+                username=message.from_user.username,
+                user_type=user_type,
+                form=form,
+                teacher_name=teacher_name,
+                student_name=student_name
+            )
         )
 
         # створюємо промпт повідомлення
@@ -202,7 +229,8 @@ class RegisterHandler(BaseHandler):
             f"<b>Тип:</b> {USER_TYPE_PRETTY.get(user_type, user_type)}\n"
         )
         if user_type == "student":
-            msg += f"<b>Клас:</b> {user_class}\n"
+            msg += (f"<b>Клас</b>: {form}\n"
+                    f"<b>Ім'я</b>: {student_name}")
         elif user_type == "teacher":
             msg += f"<b>ПІП:</b> {teacher_name}\n"
         msg += "\n❓ Якщо ви зробили одрук, то використайте команду /register для повторної реєстрації"
@@ -210,9 +238,7 @@ class RegisterHandler(BaseHandler):
         # виводимо користувачу
         await message.answer(
             msg,
-            reply_markup=HubTeacher().get_keyboard()
-            if user_type == "teacher"
-            else HubMenu().get_keyboard(),
+            reply_markup=await parse_hub_keyboard(message.from_user.id),
             parse_mode=ParseMode.HTML
         )
 
