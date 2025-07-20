@@ -3,6 +3,7 @@ import datetime
 
 from .base import BaseSheet
 from src.utils import JSONLoader
+from src.parsers.backend import ScheduleParsers
 
 
 class StudentSheet(BaseSheet):
@@ -27,53 +28,53 @@ class StudentSheet(BaseSheet):
 
         data = self.get_all_new()
 
-        # обробка помилки завантаження даних
         if not data or len(data) < 5:
             return []
 
-        # масив, що повернеться користувачу
         results = []
-
-        # імена вчителів
-        header = data[2]
-
-        # день, який оброблюється
+        header = data[2]  # тут зберігаються ПІП вчителів
         curr_day = None
+        parser = ScheduleParsers()
 
-        # проходимось по розкладу (з 4 рядку)
+        # проходимось по всіх рядках розкладу, починаючи з четвертого
         for row in data[3:]:
-            # оновлюємо день
+            # оновлюємо поточний день
+            # якщо в першій колонці є текст, то це новий день
             if len(row) > 0 and row[0].strip():
-                curr_day = row[0].strip().upper()
+                curr_day = row[0].strip()
 
-            # якщо день заданий, то можливо він не заданий
-            if day is not None and curr_day != day.upper():
+            # якщо користувач вказав конкретний день, пропускаємо інші
+            if day is not None and curr_day != day:
                 continue
 
+            # отримуємо номер уроку
             try:
                 lesson_number = int(float(row[1]))
             except (IndexError, ValueError):
                 continue
 
-            # проходимось по всіх колонках з вчителями
-            for col_index in range(2, len(row)):
+            # проходимось по всхі колонках з вчителями
+            for col_index in range(2, len(row)):  # починаємо з третьої колонки
                 try:
                     cell_value = row[col_index] if col_index < len(row) else ""
 
-                    # скіпаємо порожні клітинки
+                    # пропуск порожніх клітинок
                     if not cell_value.strip():
                         continue
 
-                    if ", " in cell_value:
-                        # Очікується: "10-А, Математика"
-                        parts = cell_value.split(", ", maxsplit=1)
-                        subject = parts[1] if len(parts) > 1 else parts[0]
-                    else:
-                        subject = cell_value
+                    # парсимо клітинку
+                    parsed_data = parser.parse_cell_value(cell_value)
+
+                    if not parsed_data or not parsed_data.get('form') or not parsed_data.get('subject'):
+                        continue
+
                 except (IndexError, ValueError):
                     continue
 
-                if form.strip().lower() in cell_value.strip().lower():
+                # перевіряємо чи це урок нашого класу
+                if form.strip().lower() == parsed_data['form'].strip().lower():
+                    subject = parsed_data['subject']
+                    # отримуємо ім'я вчителя з заголовку
                     teacher = header[col_index] if col_index < len(header) and header[col_index] else "Невідомо"
 
                     if day:
@@ -81,7 +82,6 @@ class StudentSheet(BaseSheet):
                     else:
                         results.append((curr_day, lesson_number, subject, teacher))
 
-        # обробка сортування розкладу на тиждень
         if not day:
             week_order = JSONLoader("settings/ukranian_weekname.json")
             results.sort(key=lambda r: (week_order.get(str(r[0].upper()), 99), r[1]))
