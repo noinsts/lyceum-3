@@ -5,15 +5,14 @@ from aiogram.enums import ParseMode
 from ..base import BaseHandler
 from settings.calls import Calls
 
+
 class CallsHandler(BaseHandler):
     def register_handler(self):
         self.router.message.register(self.calls, F.text == '🔔 Розклад дзвінків')
 
-
-    async def calls(self, message: Message) -> None:
+    @staticmethod
+    async def calls(message: Message) -> None:
         """Обробник кнопки 🔔 Розклад дзвінків"""
-        self.db.register.update_udata(message.from_user)  # оновлення даних про ім'я користувача та нікнейм
-
         data = Calls().CALLS
 
         prompt = "🔔 <b>Розклад дзвінків</b>\n\n"
