@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery
 
 from ..base import BaseHandler
 from src.keyboards.inline import TeacherTypes
-from src.utils.states import TeacherTypesStates
+from src.states import TeacherTypesStates
 
 
 class Meeting(BaseHandler):

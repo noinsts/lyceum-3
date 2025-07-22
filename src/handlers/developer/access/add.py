@@ -7,7 +7,7 @@ from aiogram.enums import ParseMode
 
 from src.db.connector import DBConnector
 from ...base import BaseHandler
-from src.utils.states import DevAddAccess
+from src.states import DevAddAccess
 from src.keyboards.inline import SubmitKeyboard
 
 

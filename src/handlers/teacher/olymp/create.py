@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 
 from ...base import BaseHandler
 from src.utils import parse_hub_keyboard
-from src.utils.states import CreateOlympStates
+from src.states import CreateOlympStates
 from src.keyboards.reply import SkipButton, OlympStages, GetClass
 from src.keyboards.inline import SubmitKeyboard
 from src.responses import TeacherVerify

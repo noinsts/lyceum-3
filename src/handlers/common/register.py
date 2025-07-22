@@ -9,7 +9,8 @@ from aiogram.enums import ParseMode
 from src.db.connector import DBConnector
 from src.db.schemas import AddUserSchema
 from src.handlers.base import BaseHandler
-from src.utils import RegisterStates, classes, parse_hub_keyboard
+from src.utils import classes, parse_hub_keyboard
+from src.states import RegisterStates
 from src.keyboards.reply import GetType, GetClass, HubMenu, HubTeacher
 from src.enums import DBUserType
 
