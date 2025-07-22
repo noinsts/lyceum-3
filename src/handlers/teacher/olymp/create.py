@@ -95,6 +95,8 @@ class CreateHandler(BaseHandler):
         await state.set_state(CreateOlympStates.waiting_for_subject)
         await callback.message.answer(
             "Оберіть предмет зі списку нижче, <b>поки це не працює, тож просто введіть його</b>",
+            # TODO: зробить список предметів, які веде вчитель
+            # через google sheet запит
             parse_mode=ParseMode.HTML
         )
 
@@ -111,11 +113,16 @@ class CreateHandler(BaseHandler):
         teacher_name = data.get("teacher_name")
         forms = self.sheet.teacher.my_classes(teacher_name)
 
-        # TODO: додати обробку помилок forms на None
+        if forms:
+            prompt = "Добре, оберіть клас зі списку"
+            rm = GetClass().get_keyboard(forms)
+        else:
+            prompt = "Введіть клас в форматі \"8-А\""
+            rm = None
 
         await message.answer(
-            "Добре, оберіть клас зі списку нижче",
-            reply_markup=GetClass().get_keyboard(forms),
+            prompt,
+            reply_markup=rm,
             parse_mode=ParseMode.HTML
         )
 
@@ -125,7 +132,6 @@ class CreateHandler(BaseHandler):
             await message.answer("❌ Будь ласка, введіть коректний клас (наприклад: 10-А)")
             return
 
-        # TODO: зробить автоматизовану клавіатуру, через gsheet перевірити які клави є у вчителя
         await state.update_data(form=message.text)
         await state.set_state(CreateOlympStates.waiting_for_student_name)
 
