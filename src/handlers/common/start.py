@@ -7,8 +7,9 @@ from src.db.connector import DBConnector
 from src.enums import DBUserType
 from src.handlers.base import BaseHandler
 from src.keyboards.reply import HubMenu, HubTeacher
-from src.keyboards.inline import HubAdmin, DeveloperHub
 from src.handlers.common.register import RegisterHandler
+from src.handlers.admin.hub import AdminHubHandler
+from src.handlers.developer.hub import DevHubHandler
 from settings.admins import Admins
 from settings.developers import Developers
 
@@ -26,10 +27,10 @@ class StartHandler(BaseHandler):
         developers = Developers().DEVELOPERS
 
         if user_id in developers:
-            await message.answer(
-                "The developer mode has been activated. 🚀",
-                reply_markup=DeveloperHub().get_keyboard()
-            )
+            await DevHubHandler().show_hub(message)
+
+        if user_id in admins:
+            await AdminHubHandler().show_hub(message)
 
         if await db.register.is_exists(user_id):
             # якщо користувач зареєстрований
@@ -61,12 +62,6 @@ class StartHandler(BaseHandler):
                     rm = None
 
             await message.answer(prompt, reply_markup=rm, parse_mode=ParseMode.HTML)
-
-            if user_id in admins:
-                await message.answer(
-                    "👑 Панель адміністратора ввімкнена.",
-                    reply_markup=HubAdmin().get_keyboard()
-                )
 
         else:
             # якщо користувач не зареєстрований
