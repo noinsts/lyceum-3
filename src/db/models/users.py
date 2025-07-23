@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer
+from sqlalchemy import String, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 
@@ -9,7 +9,7 @@ from src.enums import DBUserType
 class UserModel(BaseModel):
     __tablename__ = 'user'
 
-    user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     full_name: Mapped[str] = mapped_column(String(150), nullable=True)
     username: Mapped[str] = mapped_column(String(32), nullable=True)
     user_type: Mapped[DBUserType] = mapped_column(
