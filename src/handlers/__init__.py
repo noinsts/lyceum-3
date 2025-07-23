@@ -1,5 +1,6 @@
 from aiogram import Router
 
+from .service import get_service_router
 from .all import get_a_router
 from .student import get_student_router
 from .teacher import get_teacher_router
@@ -11,6 +12,8 @@ from .docs_callbacks import get_docs_routers
 
 def get_all_router() -> Router:
     main_router = Router()
+
+    main_router.include_router(get_service_router())
 
     main_router.include_router(get_a_router())
 
