@@ -1,5 +1,4 @@
 from enum import Enum
-import re
 
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.filters import Command
@@ -11,8 +10,9 @@ from src.db.schemas import AddUserSchema
 from src.handlers.base import BaseHandler
 from src.utils import classes, parse_hub_keyboard
 from src.states import RegisterStates
-from src.keyboards.reply import GetType, GetClass, HubMenu, HubTeacher
+from src.keyboards.reply import GetType, GetClass
 from src.enums import DBUserType
+from src.validators import validate_form, validate_student_name, validate_teacher_name
 
 
 USER_TYPE_PRETTY = {
@@ -92,42 +92,14 @@ class RegisterHandler(BaseHandler):
                 return
 
     @staticmethod
-    def normalize_class(raw: str) -> str | None:
-        """Валідуємо формат класу: цифра (1–12) + українська літера (А–Я)"""
-
-        match = re.match(r"^(\d{1,2})[- ]?([А-ЯІЇЄҐ])$", raw.strip().upper())
-
-        """
-        ^         — початок рядка
-        (\d{1,2}) — одна або дві цифри (клас)
-        [- ]?     — необов’язковий дефіс або пробіл
-        [А-ЯІЇЄ]  — одна велика українська літера (паралель класу)
-        $         — кінець рядка
-        """
-
-        if not match:
-            return None
-
-        # Приводимо клас до формату: 9-А → 9-А (з дефісом та великою літерою)
-        return f"{int(match.group(1))}-{match.group(2)}"
-
-        # TODO: винести в src/utils/
-
-    async def get_class(self, message: Message, state: FSMContext, db: DBConnector) -> None:
+    async def get_class(message: Message, state: FSMContext) -> None:
         """Обробляє введення класу, перевіряє формат, вікове обмеження та наявність класу в базі"""
-        form = self.normalize_class(message.text)
+        form = message.text
+        match = validate_form(form)
 
         # Якщо введено клас у неправильному форматі
-        if not form:
-            await message.answer("А якщо по чесному? Вводь щось типу '9-A' 😉")
-            return
-
-        # Якщо клас нижче 5 — користувачу ще рано в Telegram 😅
-        if int(form.split("-")[0]) < 5:
-            await message.answer(
-                "Вам дуже мало років для телеграму\n"
-                "Будь ласка, видаліть його і не згадуйте до 5-го класу 🌱"
-            )
+        if not match:
+            await message.answer("Невірно вказані дані. Вводь щось типу '9-A' 😉")
             return
 
         # перевірка класу чи є він в школі
@@ -144,8 +116,11 @@ class RegisterHandler(BaseHandler):
 
     async def get_student_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         student_name = message.text
+        match = validate_student_name(student_name)
 
-        # TODO: додати валідатори та парсери student_name
+        if not match:
+            await message.answer("Невірно введені дані. Спробуй ще раз")
+            return
 
         await state.update_data(student_name=student_name)
         await state.set_state(RegisterStates.finally_register)
@@ -156,8 +131,13 @@ class RegisterHandler(BaseHandler):
     async def get_teacher_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Запит в учителя його ПІП"""
         teacher_name = message.text
+        match = validate_teacher_name(teacher_name)
 
-        # TODO: Biletska guard
+        if not match:
+            await message.answer("Не вірно введені дані. Формат: Іванов Іван Іванович")
+            return
+
+        # Biletska guard
 
         # TODO: зробить teacher checker
 
@@ -170,8 +150,6 @@ class RegisterHandler(BaseHandler):
         #     )
         #     return
 
-        # TODO: зробить тут
-
         # інформацію про наявих користувачів в бд
         if await db.register.clone_teacher(teacher_name):
             await message.answer(
@@ -180,11 +158,6 @@ class RegisterHandler(BaseHandler):
                 "проте якщо вам це не подобається, зверніться до @noinsts</b>",
                 parse_mode=ParseMode.HTML
             )
-
-        # Валідуємо хоча б по наявності 3 слів
-        if len(teacher_name.split()) < 3:
-            await message.answer("ПІП має містити три слова (Прізвище Ім'я По-батькові). Спробуйте ще раз.")
-            return
 
         # Зберігаємо оброблені дані в машині станів (FSM)
         await state.update_data(teacher_name=teacher_name)
