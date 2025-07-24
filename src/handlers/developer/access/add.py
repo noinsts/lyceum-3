@@ -189,6 +189,8 @@ class AddAccessHandler(BaseHandler):
         """Обробка callback погодження"""
         await callback.answer()
 
+        success = False
+
         try:
             data = await state.get_data()
             user_id = data.get("user_id")
@@ -203,6 +205,7 @@ class AddAccessHandler(BaseHandler):
                 f"(ID: <code>{user_id}</code>) додано до системи.",
                 parse_mode=ParseMode.HTML
             )
+            success = True
         except Exception as e:
             await callback.message.answer(
                 "❌ <b>Помилка при збереженні</b>\n\n"
@@ -212,6 +215,13 @@ class AddAccessHandler(BaseHandler):
             self.log.error(f"Error devmode/access/add: {e}")
         finally:
             await state.clear()
+
+        if success:
+            await callback.message.answer("Повернення до головного меню...")
+
+            # запобігання циклічному імпорту
+            from src.handlers.common.start import StartHandler
+            await StartHandler().start_cmd(callback.message, state, db)
 
     @staticmethod
     async def cancel(callback: CallbackQuery, state: FSMContext) -> None:
@@ -223,7 +233,8 @@ class AddAccessHandler(BaseHandler):
             "🔄 <b>Скасовано</b>\n\n"
             "Введіть дані знову у форматі:\n\n"
             "<code>user_id</code>\n"
-            "<code>teacher_name</code>",
+            "<code>teacher_name</code>\n\n"
+            "Ну або напишіть /cancel для скасування операції",
             parse_mode=ParseMode.HTML
         )
 
