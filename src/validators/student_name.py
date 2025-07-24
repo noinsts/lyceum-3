@@ -1,3 +1,4 @@
+from typing import Tuple, Optional
 import re
 
 #: Патерн для імені учня: Прізвище Імʼя (без по батькові).
@@ -13,7 +14,7 @@ STUDENT_NAME_PATTERN:
 """
 
 
-def validate_student_name(student_name: str) -> bool:
+def validate_student_name(student_name: str) -> Tuple[bool, Optional[str]]:
     """
     Валідує ім'я студенту, наприклад (Остапенко Михайло)
 
@@ -21,10 +22,20 @@ def validate_student_name(student_name: str) -> bool:
         student_name (str): ім'я студента
 
     Returns:
-        True якщо формат вірний, False інакше
+        Tuple:
+            bool: чи проходить аргумент перевірка
+            reason: примітки, щодо валідації
     """
 
-    if not isinstance(student_name, str):
-        return False
+    if len(student_name) < 3:
+        return False, "Довжина імені має бути більше 3 символів"
 
-    return bool(STUDENT_NAME_PATTERN.match(student_name.strip()))
+    if len(student_name) > 50:
+        return False, "Довжина імені має бути менше 50 символів"
+
+    match = STUDENT_NAME_PATTERN.match(student_name.strip())
+
+    if not isinstance(student_name, str) or not match:
+        return False, "Використовуйте формат: \"Прізвище ім'я\""
+
+    return True, ""
