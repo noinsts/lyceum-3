@@ -8,6 +8,8 @@ from ..base import BaseHandler
 from src.utils import JSONLoader
 from src.db.connector import DBConnector
 
+WEEKDAYS = ('ПОНЕДІЛОК', 'ВІВТОРОК', 'СЕРЕДА', 'ЧЕТВЕР', "П'ЯТНИЦЯ")
+
 
 class AllWeekHandler(BaseHandler):
     def register_handler(self):
@@ -21,6 +23,10 @@ class AllWeekHandler(BaseHandler):
         user_class = await db.register.get_form(message.from_user.id)
         results = self.sheet.student.get_lessons(user_class)
 
+        if not results:
+            await message.answer("У вас немає уроків. Дивно, правда?)")
+            return
+
         # сортуємо по днях
         lessons_by_day = defaultdict(list)
         for day, number, subject, teacher in results:
@@ -32,23 +38,24 @@ class AllWeekHandler(BaseHandler):
         # завантажуємо файл з орудними відмінками
         vocative_names = JSONLoader("settings/vocative_teacher_name.json")
 
-        for day, lessons in lessons_by_day.items():
+        for day in WEEKDAYS:
+            if day not in lessons_by_day:
+                continue
+
             prompt += f"\n<b>{day.capitalize()}</b>\n"
-            for number, subject, teacher in lessons:
+            for number, subject, teacher in sorted(lessons_by_day[day]):
                 # парсимо дані відповідно до тижня
                 subject, teacher = self.wf.student(subject, teacher)
 
                 if not subject:
                     continue
 
-                # масив з імена вчителів
-                teacher_names = []
-
                 # TODO: винести парсер в окремий файл
                 # парсомо імена вчителів за орудним відмінком
-                for t in map(str.strip, teacher.split(',')):
-                    voc_name = vocative_names.get(t)
-                    teacher_names.append(voc_name if voc_name else t)
+                teacher_names = [
+                    vocative_names.get(t.strip(), t.strip())
+                    for t in teacher.split(',')
+                ]
 
                 teacher_string = " та ".join(teacher_names)
                 prompt += f"<b>{number}</b>: {subject} з {teacher_string}\n"
