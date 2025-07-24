@@ -116,10 +116,10 @@ class RegisterHandler(BaseHandler):
 
     async def get_student_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         student_name = message.text
-        match = validate_student_name(student_name)
+        match, reason = validate_student_name(student_name)
 
         if not match:
-            await message.answer("Невірно введені дані. Спробуй ще раз")
+            await message.answer(reason)
             return
 
         await state.update_data(student_name=student_name)
@@ -131,10 +131,10 @@ class RegisterHandler(BaseHandler):
     async def get_teacher_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Запит в учителя його ПІП"""
         teacher_name = message.text
-        match = validate_teacher_name(teacher_name)
+        match, reason = validate_teacher_name(teacher_name)
 
         if not match:
-            await message.answer("Не вірно введені дані. Формат: Іванов Іван Іванович")
+            await message.answer(reason)
             return
 
         # Biletska guard
