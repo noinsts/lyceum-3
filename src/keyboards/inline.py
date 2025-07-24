@@ -84,3 +84,13 @@ class DeveloperAccessHub(BaseKeyboard):
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class TeacherVerifyFAQ(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='Як отримати верифікацію', callback_data='how_get_verify')],
+            [InlineKeyboardButton(text='Нащо це потрібно', callback_data='why_need_verify')]
+        ]
+
+        return InlineKeyboardMarkup(inline_keyboard=kb)
