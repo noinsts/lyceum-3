@@ -4,6 +4,7 @@ from .announcement_hub import AnnouncementHub
 from .students_change_schedule import StudentsChangeSchedule
 from .teachers_change_schedule import TeachersChangeSchedule
 from .meeting import Meeting
+from .announcement import get_announcement_router
 
 from src.middlewares import RoleAccessMiddleware
 
@@ -17,6 +18,7 @@ def get_admin_router() -> Router:
         StudentsChangeSchedule().get_router(),
         TeachersChangeSchedule().get_router(),
         Meeting().get_router()
+        *get_announcement_router(),
     ]
 
     for r in routers:

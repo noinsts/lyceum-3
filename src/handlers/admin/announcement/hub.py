@@ -1,14 +1,16 @@
 from aiogram import F
 from aiogram.types import CallbackQuery
-# from aiogram.enums import ParseMode
 
-from .. base import BaseHandler
+from ...base import BaseHandler
 from src.keyboards.inline import AdminAnnouncementHub
 
 
 class AnnouncementHub(BaseHandler):
     def register_handler(self) -> None:
-        self.router.callback_query.register(self.announcement_hub, F.data == 'announcement_hub')
+        self.router.callback_query.register(
+            self.announcement_hub,
+            F.data == 'announcement_hub'
+        )
 
     @staticmethod
     async def announcement_hub(callback: CallbackQuery):

@@ -3,12 +3,12 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from ..base import BaseHandler
+from ...base import BaseHandler
 from src.keyboards.inline import TeacherTypes
 from src.states import TeacherTypesStates
 
 
-class Meeting(BaseHandler):
+class MeetingHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.callback_query.register(
             self.meeting,
