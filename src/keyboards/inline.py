@@ -6,18 +6,27 @@ from .base import BaseKeyboard
 class HubAdmin(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='📢 Створити оголошення', callback_data="announcement_hub")]
+            [InlineKeyboardButton(text='📢 Створити оголошення', callback_data="announcement_hub")],
+            [InlineKeyboardButton(text='📅 Змінити розклад', callback_data='admin_schedule_hub')]
         ]
 
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class HubAdminSchedule(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='🧑🏻‍🎓', callback_data='change_schedule_student'),
+             InlineKeyboardButton(text='🧑🏻‍🏫', callback_data='change_schedule_teacher')],
+            [InlineKeyboardButton(text='🔃 Refresh', callback_data='refresh_cache_schedule')]
+        ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
 class AdminAnnouncementHub(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='Зміна розкладу (СТУДЕНТИ)', callback_data='students_change_schedule')],
-            [InlineKeyboardButton(text='Зміна розкладу (ВЧИТЕЛІ)', callback_data='teachers_change_schedule')],
-            [InlineKeyboardButton(text='🫱🏻‍🫲🏻 Запланувати нараду', callback_data='meeting')],
+            [InlineKeyboardButton(text='🫱🏻‍🫲🏻 Запланувати нараду', callback_data='meeting')]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
