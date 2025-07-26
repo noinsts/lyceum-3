@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup
 
 from .base import BaseKeyboard
 
@@ -16,7 +16,7 @@ class GetType(BaseKeyboard):
 
 
 class GetClass(BaseKeyboard):
-    def get_keyboard(self, classes: List | None = None) -> ReplyKeyboardMarkup:
+    def get_keyboard(self, classes: Optional[List] = None) -> ReplyKeyboardMarkup:
         keyboard_buttons = []
         row = []
 
@@ -27,6 +27,13 @@ class GetClass(BaseKeyboard):
                 row = []
 
         return ReplyKeyboardMarkup(keyboard=keyboard_buttons, resize_keyboard=True)
+
+
+class GetClassWithDone(GetClass):
+    def get_keyboard(self, classes: Optional[List] = None) -> ReplyKeyboardMarkup:
+        base_keyboard = super().get_keyboard(classes)
+        base_keyboard.keyboard.append([KeyboardButton(text='✅ Готово')])
+        return base_keyboard
 
 
 """HUB"""
