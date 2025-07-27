@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from pyngrok import ngrok
 
+from src.bot_instance import set_bot
 from src.handlers import get_all_router
 from src.utils import setup_logger
 from src.db.db import create_db
@@ -30,6 +31,8 @@ TOKEN = os.getenv("TOKEN")
 class LyceumBot:
     def __init__(self):
         self.bot = Bot(token=TOKEN)
+        set_bot(self.bot)
+
         self.storage = MemoryStorage()
         self.dp = Dispatcher(storage=self.storage)
         self.log = setup_logger()
