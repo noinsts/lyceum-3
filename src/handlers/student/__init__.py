@@ -3,6 +3,7 @@ from aiogram import Router
 from .all_week import AllWeekHandler
 from .lessons_by_day import LessonsTodayHandler, LessonsTomorrowHandler
 from .next_lesson import NextLessonHandler
+from .interesting_button import InterestingButtonHandler
 # from .olymps import OlympHandler
 from src.middlewares import RoleAccessMiddleware
 
@@ -16,6 +17,7 @@ def get_student_router() -> Router:
         LessonsTodayHandler().get_router(),
         LessonsTomorrowHandler().get_router(),
         NextLessonHandler().get_router(),
+        InterestingButtonHandler().get_router()
         # OlympHandler().get_router()
     ]
 
