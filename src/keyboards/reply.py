@@ -32,7 +32,7 @@ class GetClass(BaseKeyboard):
 class GetClassWithDone(GetClass):
     def get_keyboard(self, classes: Optional[List] = None) -> ReplyKeyboardMarkup:
         base_keyboard = super().get_keyboard(classes)
-        base_keyboard.keyboard.append([KeyboardButton(text='✅ Готово')])
+        base_keyboard.keyboard.append([KeyboardButton(text='ℹ️ Обрані класи'), KeyboardButton(text='✅ Готово')])
         return base_keyboard
 
 
