@@ -1,3 +1,5 @@
+from typing import List, cast
+
 from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
@@ -95,3 +97,10 @@ class RegisterQueries:
             await self.session.rollback()
             logger.error(f"Інша помилка у add_user: {e}")
             raise
+
+    async def get_by_form(self, form: str) -> List[int]:
+        query = select(UserModel.user_id).where(
+            UserModel.form == form
+        )
+        result = await self.session.execute(query)
+        return cast(List[int], result.scalars().all())
