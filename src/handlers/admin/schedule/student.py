@@ -6,7 +6,6 @@ from aiogram import F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
-from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
 from ...base import BaseHandler
 from src.keyboards.reply import GetClassWithDone
@@ -14,7 +13,7 @@ from src.keyboards.inline import SubmitKeyboard
 from src.utils import classes
 from src.states.admin import StudentSchedule
 from src.db.connector import DBConnector
-from src.bot_instance import get_bot
+from src.service import broadcast
 
 FINISH_TRIGGER = "✅ Готово"
 SELECTED_FORMS_TRIGGER = "ℹ️ Обрані класи"
@@ -159,7 +158,8 @@ class StudentsChangeSchedule(BaseHandler):
             parse_mode=ParseMode.HTML
         )
 
-    async def confirm(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
+    @staticmethod
+    async def confirm(callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
         await callback.answer()
 
         data = await state.get_data()
@@ -174,7 +174,7 @@ class StudentsChangeSchedule(BaseHandler):
 
         for form in dataset:
             student_ids = await db.register.get_by_form(form)
-            cc, ff = await self._broadcast_message(prompt, student_ids)
+            cc, ff = await broadcast(prompt, student_ids)
 
             count += cc
             failed += ff
@@ -182,38 +182,6 @@ class StudentsChangeSchedule(BaseHandler):
         await callback.message.answer(
             f"Чудово! Ви надіслали {count}/{failed} учням сповіщення про зміну уроків"
         )
-
-    @staticmethod
-    async def _broadcast_message(prompt: str, student_ids: List) -> Tuple:
-        """
-        Метод оброблює відправку оголошення.
-
-        Args:
-            prompt (str): повідомлення, що треба відправити
-            student_ids (List[int]): список користувачів, котрим треба відправити сповіщення
-
-        Returns:
-            Tuple:
-                int: кількість користувачів, які отримали повідомлення
-                int: кількість користувачів, що не змогли отримати повідомлення
-        """
-        bot = get_bot()
-
-        count, failed = 0, 0
-
-        for student_in in student_ids:
-            try:
-                await bot.send_message(
-                    student_in,
-                    prompt,
-                    parse_mode=ParseMode.HTML
-                )
-                count += 1
-            except (TelegramBadRequest, TelegramForbiddenError):
-                failed += 1
-                continue
-
-        return count, failed
 
     @staticmethod
     async def cancel(callback: CallbackQuery, state: FSMContext) -> None:
