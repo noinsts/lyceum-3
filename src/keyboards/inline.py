@@ -1,6 +1,11 @@
+from typing import List, Optional, Tuple
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .base import BaseKeyboard
+from src.enums import TeacherTypeEnum
+from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback
 
 
 class HubAdmin(BaseKeyboard):
@@ -34,26 +39,53 @@ class AdminAnnouncementHub(BaseKeyboard):
 
 class TeacherTypes(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
-        kb = [
-            [InlineKeyboardButton(text='Початкових класів', callback_data='teacher_primary')],
-            [InlineKeyboardButton(text='Середньої ланки', callback_data='teacher_middle')],
-            [InlineKeyboardButton(text='Старших класів', callback_data='teacher_senior')],
-            [InlineKeyboardButton(text='Асистенти-вчителі', callback_data='teacher_assistant')],
-            [InlineKeyboardButton(text='Іноземні мови', callback_data='teacher_foreign')],
-            [InlineKeyboardButton(text='Інклюзивна освіта', callback_data='teacher_inclusive')],
-            [InlineKeyboardButton(text='Вч. історії, правознавства та гром. освіти', callback_data='teacher_social_studies')],
-            [InlineKeyboardButton(text='Математики, програмісти 😏', callback_data='teacher_stem')],
-            [InlineKeyboardButton(text='Філологи', callback_data='teacher_philology')],
-            [InlineKeyboardButton(text='Природничі дисципліни', callback_data='teacher_natural_sciences')],
-            [InlineKeyboardButton(text='Вчителі фізичної культури', callback_data='teacher_sport')],
-            [InlineKeyboardButton(text='✅ Готово', callback_data='meeting_submit_button')]
-        ]
+        kb = InlineKeyboardBuilder()
 
+        for category in TeacherTypeEnum:
+            kb.button(
+                text=category.value,
+                callback_data=TeacherCategoryCallback(name=category.name.lower()).pack()
+            )
+
+        kb.button(text='✅ Готово', callback_data="admin_teacher_schedule_done")
+        kb.button(text='ℹ️ Список доданих', callback_data="admin_teacher_schedule_list")
+
+        kb.adjust(1)
+
+        return kb.as_markup()
+
+
+class TeacherList(BaseKeyboard):
+    def get_keyboard(self, teacher_list: Optional[List[Tuple[int, str]]] = None) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+
+        if not teacher_list:
+            teacher_list = []
+
+        for teacher_id, teacher_name in teacher_list:
+            kb.button(
+                text=teacher_name,
+                callback_data=TeacherListCallback(teacher_id=teacher_id).pack()
+            )
+
+        kb.button(text="🔙 Назад", callback_data="admin_back_to_select_category")
+
+        kb.adjust(1)
+
+        return kb.as_markup()
+
+
+class AdminTeacherBackToCategory(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="🔙 Продовжити додавання", callback_data="admin_back_to_select_category")],
+            [InlineKeyboardButton(text="✅ Відправити сповіщення", callback_data="admin_teacher_schedule_done")]
+        ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
 class SubmitKeyboard(BaseKeyboard):
-    def get_keyboard(self, submit_cb: str = "submit", cancel_cb: str ="cancel") -> InlineKeyboardMarkup:
+    def get_keyboard(self, submit_cb: str = "submit", cancel_cb: str = "cancel") -> InlineKeyboardMarkup:
         kb = [
             [InlineKeyboardButton(text='✅ Так, підтвердити', callback_data=submit_cb)],
             [InlineKeyboardButton(text='❌ Ні, почати заповнювати наново', callback_data=cancel_cb)]
