@@ -10,3 +10,4 @@ class DBConnector:
         self.register = RegisterQueries(session)
         self.olymp = OlympQueries(session)
         self.verification = TeacherVerificationQueries(session)
+        self.qualification = QualificationQueries(session)
