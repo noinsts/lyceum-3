@@ -106,3 +106,10 @@ class RegisterQueries:
         result = await self.session.execute(query)
         user_ids = result.scalars().all()
         return list(user_ids)
+
+    async def get_by_teacher_name(self, teacher_name: str) -> List[int]:
+        """Повертає список Telegram ID користувачів, у яких вказано задане ім'я вчителя."""
+        query = select(UserModel.user_id).where(UserModel.teacher_name == teacher_name)
+        result = await self.session.execute(query)
+        user_ids = result.scalars().all()
+        return list(user_ids)
