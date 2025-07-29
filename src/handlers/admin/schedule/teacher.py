@@ -13,6 +13,7 @@ from src.keyboards.inline import TeacherTypes, TeacherList, AdminTeacherBackToCa
 from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback
 from src.enums import TeacherTypeEnum
 from src.service import broadcast
+from src.utils import JSONLoader
 
 HANDLER_TRIGGER = "change_schedule_teacher"
 BACK_TRIGGGER = "admin_back_to_select_category"
@@ -234,11 +235,22 @@ class TeachersChangeSchedule(BaseHandler):
 
         total_sent, total_failed = 0, 0
 
+        vocative_teacher_names = JSONLoader("settings/vocative_teacher_shortname.json")
+
         for teacher_name in teacher_names:
             user_ids = await db.register.get_by_teacher_name(teacher_name)
 
             if not user_ids:
                 continue
+
+            # Відрізати 2 останніх слова: ['Ім'я', 'По-батькові']
+            short_name_parts = teacher_name.split(" ")[-2:]
+            short_name = " ".join(short_name_parts)  # Збираємо назад рядок
+
+            vocative_name = vocative_teacher_names.get(short_name)
+
+            if vocative_name:
+                teacher_name = vocative_name
 
             prompt = (
                 f"<b>Шановний(-а), {teacher_name}</b>\n\n"
