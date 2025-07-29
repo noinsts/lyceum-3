@@ -36,7 +36,7 @@ class AllWeekHandler(BaseHandler):
         prompt = f"<b>Список уроків {user_class} класу</b>\n"
 
         # завантажуємо файл з орудними відмінками
-        vocative_names = JSONLoader("settings/vocative_teacher_name.json")
+        instrumental_names = JSONLoader("settings/instrumental_teacher_names.json")
 
         for day in WEEKDAYS:
             if day not in lessons_by_day:
@@ -53,7 +53,7 @@ class AllWeekHandler(BaseHandler):
                 # TODO: винести парсер в окремий файл
                 # парсомо імена вчителів за орудним відмінком
                 teacher_names = [
-                    vocative_names.get(t.strip(), t.strip())
+                    instrumental_names.get(t.strip(), t.strip())
                     for t in teacher.split(',')
                 ]
 
