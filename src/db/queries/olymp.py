@@ -1,3 +1,6 @@
+from typing import List
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -18,3 +21,13 @@ class OlympQueries:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
+
+    async def my_olymps(self, student_name: str, form: str) -> List[OlympModel]:
+        """Метод повертає список ваших олімпіад (учень)"""
+        query = select(OlympModel).where(
+            OlympModel.student_name == student_name,
+            OlympModel.form == form
+        )
+        result = await self.session.execute(query)
+        olympiads: List[OlympModel] = list(result.scalars().all())
+        return olympiads
