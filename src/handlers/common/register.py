@@ -24,7 +24,6 @@ USER_TYPE_PRETTY = {
 class UserType(str, Enum):
     STUDENT = "👨‍🎓 Учень"
     TEACHER = "👨‍🏫 Вчитель"
-    CMD_START = "/start"
 
 
 class RegisterHandler(BaseHandler):
@@ -81,12 +80,6 @@ class RegisterHandler(BaseHandler):
                 await state.set_state(RegisterStates.waiting_for_teacher_name)
                 await message.answer("Будь ласка, вкажіть ваше ПІП (повністю)", reply_markup=ReplyKeyboardRemove())
 
-            case UserType.CMD_START.value:
-                await state.clear()
-                # імпорт в середині циклу задля уникнення циклічного імпорту
-                from .start import StartHandler
-                await StartHandler().start_cmd(message, state, db)
-
             case _:
                 await message.answer("Будь ласка, оберіть варіант, натиснувши на кнопку 👇")
                 return
@@ -139,19 +132,17 @@ class RegisterHandler(BaseHandler):
 
         # Biletska guard
 
-        # TODO: зробить teacher checker
+        if not await db.register.teacher_is_exists(teacher_name):
+            await message.answer(
+                "🚫 Такого ПІП немає в нашому списку вчителів. "
+                "Можливо, ви ввели з помилкою або ще не додані до бази.\n"
+                "Спробуйте ще раз або зверніться до @noinsts 👨‍💻"
+            )
+            return
 
-        # Якщо введений ПІП не належить до списку вчителів школи
-        # if not self.db.register.teacher_checker(teacher_name):
-        #     await message.answer(
-        #         "🚫 Такого ПІП немає в нашому списку вчителів. "
-        #         "Можливо, ви ввели з помилкою або ще не додані до бази.\n"
-        #         "Спробуйте ще раз або зверніться до @noinsts 👨‍💻"
-        #     )
-        #     return
-
+        # TODO: можливо випилить
         # інформацію про наявих користувачів в бд
-        if await db.register.clone_teacher(teacher_name):
+        if await db.register.clone_teacher(message.from_user.id, teacher_name):
             await message.answer(
                 "💥 <b>Зверніть увагу, хтось з таким ім'я вже зареєстрований. "
                 "Це не завадить вам користуватись проектом, "
@@ -204,7 +195,7 @@ class RegisterHandler(BaseHandler):
         )
         if user_type == "student":
             msg += (f"<b>Клас</b>: {form}\n"
-                    f"<b>Ім'я</b>: {student_name}")
+                    f"<b>Ім'я</b>: {student_name}\n")
         elif user_type == "teacher":
             msg += f"<b>ПІП:</b> {teacher_name}\n"
         msg += "\n❓ Якщо ви зробили одрук, то використайте команду /register для повторної реєстрації"
