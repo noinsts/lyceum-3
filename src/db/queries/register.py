@@ -1,10 +1,10 @@
-from typing import List, cast
+from typing import List
 
 from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..models import UserModel
+from ..models import UserModel, TeacherModel
 from src.utils import setup_logger
 from src.enums import DBUserType
 from ..schemas import AddUserSchema
@@ -63,13 +63,14 @@ class RegisterQueries:
         result = await self.session.execute(query)
         return result.scalar()
     
-    async def clone_teacher(self, teacher_name: str) -> bool:
+    async def clone_teacher(self, user_id: int, teacher_name: str) -> bool:
         """Перевіряє чи існує вчитель з таким ім'ям"""
         query = select(UserModel.teacher_name).where(
+            UserModel.user_id != user_id,
             UserModel.teacher_name == teacher_name
         )
         result = await self.session.execute(query)
-        return result.scalar_one_or_none() is not None
+        return result.scalar() is not None
 
     async def add_user(self, data: AddUserSchema) -> None:
         try:
@@ -113,3 +114,9 @@ class RegisterQueries:
         result = await self.session.execute(query)
         user_ids = result.scalars().all()
         return list(user_ids)
+
+    async def teacher_is_exists(self, teacher_name: str) -> bool:
+        """Метод повертає логічне значення чи є вказаний вчитель в списках Березанського ліцею"""
+        query = select(TeacherModel).where(TeacherModel.name == teacher_name)
+        result = await self.session.execute(query)
+        return result.scalar() is not None
