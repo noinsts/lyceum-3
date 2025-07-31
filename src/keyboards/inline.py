@@ -1,11 +1,11 @@
 from typing import List, Optional, Tuple
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .base import BaseKeyboard
 from src.enums import TeacherTypeEnum
-from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback
+from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback, FormsListCallback
 
 
 class HubAdmin(BaseKeyboard):
@@ -82,6 +82,27 @@ class AdminTeacherBackToCategory(BaseKeyboard):
             [InlineKeyboardButton(text="✅ Відправити сповіщення", callback_data="admin_teacher_schedule_done")]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class SelectFormMultiply(BaseKeyboard):
+    def get_keyboard(self, classes: Optional[List[str]] = None) -> InlineKeyboardMarkup:
+        main_kb = InlineKeyboardBuilder()
+        control_kb = InlineKeyboardBuilder()
+
+        for form in classes:
+            main_kb.button(
+                text=form,
+                callback_data=FormsListCallback(form=form).pack()
+            )
+        main_kb.adjust(3)
+
+        control_kb.button(text='✅ Готово', callback_data="admin_student_schedule_done")
+        control_kb.button(text='ℹ️ Список доданих', callback_data="admin_student_schedule_list")
+        control_kb.adjust(1)
+
+        main_kb.attach(control_kb)
+
+        return main_kb.as_markup()
 
 
 class SubmitKeyboard(BaseKeyboard):
