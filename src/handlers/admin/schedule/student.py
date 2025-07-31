@@ -3,93 +3,92 @@
 from typing import Set, List, Tuple
 
 from aiogram import F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
 from ...base import BaseHandler
-from src.keyboards.reply import GetClassWithDone
-from src.keyboards.inline import SubmitKeyboard
+from src.keyboards.inline import SubmitKeyboard, SelectFormMultiply
 from src.utils import classes
 from src.states.admin import StudentSchedule
 from src.db.connector import DBConnector
 from src.service import broadcast
+from src.filters.callbacks import FormsListCallback
 
-FINISH_TRIGGER = "✅ Готово"
-SELECTED_FORMS_TRIGGER = "ℹ️ Обрані класи"
+HANDLER_TRIGGER = "change_schedule_student"
+FINISH_TRIGGER = "admin_student_schedule_done"
+SELECTED_FORMS_TRIGGER = "admin_student_schedule_list"
+SUBMIT_TRIGGER = "submit_send_student_schedule_broadcast"
+CANCEL_TRIGGER = "cancel_send_student_schedule_broadcast"
 
 
 class StudentsChangeSchedule(BaseHandler):
     def register_handler(self) -> None:
         self.router.callback_query.register(
             self.handler,
-            F.data == 'change_schedule_student'
+            F.data == HANDLER_TRIGGER
         )
 
-        self.router.message.register(
+        self.router.callback_query.register(
             self.final,
-            StudentSchedule.waiting_for_forms,
-            F.text == FINISH_TRIGGER
+            F.data == FINISH_TRIGGER,
+            StudentSchedule.waiting_for_forms
         )
 
-        self.router.message.register(
+        self.router.callback_query.register(
             self.selected_forms,
-            StudentSchedule.waiting_for_forms,
-            F.text == SELECTED_FORMS_TRIGGER
+            F.data == SELECTED_FORMS_TRIGGER,
+            StudentSchedule.waiting_for_forms
         )
 
-        self.router.message.register(
+        self.router.callback_query.register(
             self.input_form,
+            FormsListCallback.filter(),
             StudentSchedule.waiting_for_forms
         )
 
         self.router.callback_query.register(
             self.confirm,
-            StudentSchedule.waiting_for_confirmation,
-            F.data == 'submit_send_student_schedule_broadcast'
+            F.data == SUBMIT_TRIGGER,
+            StudentSchedule.waiting_for_confirmation
         )
 
         self.router.callback_query.register(
             self.cancel,
-            StudentSchedule.waiting_for_confirmation,
-            F.data == 'cancel_send_student_schedule_broadcast'
+            F.data == CANCEL_TRIGGER,
+            StudentSchedule.waiting_for_confirmation
         )
 
     @staticmethod
     async def handler(callback: CallbackQuery, state: FSMContext) -> None:
-        markup = GetClassWithDone().get_keyboard(classes.CLASSES)
+        forms = classes.CLASSES
 
         await callback.message.answer(
             "Оберіть класи зі списку",
-            reply_markup=markup
+            reply_markup=SelectFormMultiply().get_keyboard(forms)
         )
 
         await state.set_state(StudentSchedule.waiting_for_forms)
 
-        forms = [button.text for row in markup.keyboard for button in row]
-        await state.update_data(forms=forms)
-
         dataset = set()
         await state.update_data(dataset=list(dataset))
+        await state.update_data(forms=forms)
 
         # заглушка
         await callback.answer()
 
-    async def input_form(self, message: Message, state: FSMContext) -> None:
+    async def input_form(self, callback: CallbackQuery, callback_data: FormsListCallback, state: FSMContext) -> None:
         data = await state.get_data()
 
         forms = data.get("forms")
         dataset = set(data.get("dataset", []))
 
-        valid, response, updated_dataset = self._validate_forms(message.text, dataset, forms)
+        valid, response, updated_dataset = self._validate_forms(callback_data.form, dataset, forms)
 
         if valid:
             await state.update_data(dataset=list(updated_dataset))
 
-        await message.answer(
-            response,
-            parse_mode=ParseMode.HTML
-        )
+        await callback.answer(response)
 
     @staticmethod
     def _validate_forms(raw: str, dataset: Set[str], forms: List[str]) -> Tuple[bool, str, Set[str]]:
@@ -107,22 +106,22 @@ class StudentsChangeSchedule(BaseHandler):
                 str: Повідомлення для користувача.
                 Set[str]: Оновлений набір обраних класів.
         """
-        if raw in forms:
+        if raw not in forms:
             return False, "❌ Такого класу не існує", dataset
 
-        if raw not in dataset:
+        if raw in dataset:
             dataset.remove(raw)
-            return True, f"Ви видалили <b>{raw}</b> з списку класів.", dataset
+            return True, f"Ви видалили {raw} з списку класів.", dataset
 
         dataset.add(raw)
-        return True, f"Ви додали <b>{raw}</b> до списку класів", dataset
+        return True, f"Ви додали {raw} до списку класів", dataset
 
-    async def selected_forms(self, message: Message, state: FSMContext) -> None:
+    async def selected_forms(self, callback: CallbackQuery, state: FSMContext) -> None:
         data = await state.get_data()
         forms = set(data.get("dataset", []))
 
         if not forms:
-            await message.answer(
+            await callback.answer(
                 "Ви поки що не обрали жодного класу, але ще не пізно це виправить..."
             )
             return
@@ -130,16 +129,15 @@ class StudentsChangeSchedule(BaseHandler):
         prompt = "<b>Список обраних класів</b>\n\n"
         prompt += self._forms_prompt(forms)
 
-        await message.answer(prompt, parse_mode=ParseMode.HTML)
+        await callback.message.edit_text(prompt, parse_mode=ParseMode.HTML)
+        await callback.answer()
 
-    async def final(self, message: Message, state: FSMContext) -> None:
-        await state.set_state(StudentSchedule.waiting_for_confirmation)
-
+    async def final(self, callback: CallbackQuery, state: FSMContext) -> None:
         data = await state.get_data()
         dataset = set(data.get("dataset", []))
 
         if len(dataset) < 1:
-            await message.answer(
+            await callback.answer(
                 "❌ Ви не вказали жодного класу. "
                 "Якщо хочете скасувати відправлення оголошення, то напишіть /cancel"
             )
@@ -149,14 +147,14 @@ class StudentsChangeSchedule(BaseHandler):
         prompt += self._forms_prompt(dataset)
         prompt += "\n<i>оберіть наступну дію</i>"
 
-        await message.answer(
+        await state.set_state(StudentSchedule.waiting_for_confirmation)
+
+        await callback.message.edit_text(
             prompt,
-            reply_markup=SubmitKeyboard().get_keyboard(
-                "submit_send_student_schedule_broadcast",
-                "cancel_send_student_schedule_broadcast"
-            ),
+            reply_markup=SubmitKeyboard().get_keyboard(SUBMIT_TRIGGER, CANCEL_TRIGGER),
             parse_mode=ParseMode.HTML
         )
+        await callback.answer()
 
     @staticmethod
     async def confirm(callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
@@ -170,17 +168,20 @@ class StudentsChangeSchedule(BaseHandler):
             "Перегляньте новий розклад."
         )
 
-        count, failed = 0, 0
+        total_sent, total_failed = 0, 0
 
         for form in dataset:
             student_ids = await db.register.get_by_form(form)
-            cc, ff = await broadcast(prompt, student_ids)
+            sent, failed = await broadcast(prompt, student_ids)
 
-            count += cc
-            failed += ff
+            total_sent += sent
+            total_failed += failed
 
-        await callback.message.answer(
-            f"Чудово! Ви надіслали {count}/{failed} учням сповіщення про зміну уроків"
+        await callback.message.edit_text(
+            f"✅ Сповіщення надіслано!\n\n"
+            f"📨 Успішно: <b>{total_sent}</b>\n"
+            f"❌ Не вдалося: <b>{total_failed}</b>",
+            parse_mode=ParseMode.HTML
         )
 
     @staticmethod
@@ -190,9 +191,9 @@ class StudentsChangeSchedule(BaseHandler):
         await state.update_data(dataset=[])
         await state.set_state(StudentSchedule.waiting_for_forms)
 
-        await callback.message.answer(
+        await callback.message.edit_text(
             "Ну і ладно, введіть класи, які хочете сповістити",
-            reply_markup=GetClassWithDone().get_keyboard(classes.CLASSES)
+            reply_markup=SelectFormMultiply().get_keyboard(classes.CLASSES)
         )
 
     @staticmethod
