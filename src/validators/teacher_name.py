@@ -1,6 +1,8 @@
 from typing import Tuple, Optional
 import re
 
+from src.db.connector import DBConnector
+
 #: Патерн для повного ПІБ вчителя: Прізвище Імʼя По батькові.
 #: Дозволяє українські літери, апострофи, дефіси.
 TEACHER_NAME_PATTERN = re.compile(
@@ -15,12 +17,13 @@ TEACHER_NAME_PATTERN:
 """
 
 
-def validate_teacher_name(teacher_name: str) -> Tuple[bool, Optional[str]]:
+async def validate_teacher_name(teacher_name: str, db: DBConnector) -> Tuple[bool, Optional[str]]:
     """
     Валідує ім'я вчителя, наприклад (Іванов Іван Іванович)
 
     Args:
         teacher_name (str): ім'я вчителя
+        db (DBConnector): бд з якої буде вестись перевірка на наявність вчителя
 
     Returns:
         Tuple:
@@ -38,5 +41,12 @@ def validate_teacher_name(teacher_name: str) -> Tuple[bool, Optional[str]]:
 
     if not isinstance(teacher_name, str) or not match:
         return False, "Використовуйте формат \"Прізвище ім'я по-батькові\""
+
+    if not await db.register.teacher_is_exists(teacher_name):
+        return False, (
+            "🚫 Такого ПІП немає в нашому списку вчителів. "
+            "Можливо, ви ввели з помилкою або ще не додані до бази.\n"
+            "Спробуйте ще раз або зверніться до @noinsts 👨‍💻"
+        )
 
     return True, ""

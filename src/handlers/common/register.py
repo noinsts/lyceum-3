@@ -124,21 +124,13 @@ class RegisterHandler(BaseHandler):
     async def get_teacher_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Запит в учителя його ПІП"""
         teacher_name = message.text
-        match, reason = validate_teacher_name(teacher_name)
+        match, reason = await validate_teacher_name(teacher_name, db)
 
         if not match:
             await message.answer(reason)
             return
 
         # Biletska guard
-
-        if not await db.register.teacher_is_exists(teacher_name):
-            await message.answer(
-                "🚫 Такого ПІП немає в нашому списку вчителів. "
-                "Можливо, ви ввели з помилкою або ще не додані до бази.\n"
-                "Спробуйте ще раз або зверніться до @noinsts 👨‍💻"
-            )
-            return
 
         # TODO: можливо випилить
         # інформацію про наявих користувачів в бд
