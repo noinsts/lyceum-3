@@ -11,3 +11,4 @@ class TeacherModel(BaseModel):
     name: Mapped[str] = mapped_column(String, nullable=False)
 
     qualifications = relationship('TeacherQualificationModel', back_populates='teacher')
+    verification = relationship("TeacherVerificationModel", uselist=False, back_populates="teacher")
