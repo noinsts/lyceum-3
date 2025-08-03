@@ -17,6 +17,12 @@ class TeacherVerificationQueries:
         result = await self.session.execute(query)
         return result.scalar()
 
+    async def _get_teacher_name(self, teacher_id: int) -> str:
+        """Метод повертає ім'я вчителя за його ID"""
+        query = select(TeacherModel.name).where(TeacherModel.id == teacher_id)
+        result = await self.session.execute(query)
+        return result.scalar()
+
     async def is_verif(self, user_id: int, teacher_name: str) -> bool:
         """Повертає булеве значення верифікації вчителя"""
         teacher_id = await self._get_teacher_id(teacher_name)
@@ -54,6 +60,16 @@ class TeacherVerificationQueries:
         )
         result = await self.session.execute(query)
         return result.scalar()
+
+    async def get_teacher_name(self, user_id: int) -> Optional[str]:
+        """Отримує ім'я вчителя за user_id"""
+        query = select(TeacherVerificationModel.teacher_id).where(
+            TeacherVerificationModel.user_id == user_id
+        )
+        result = await self.session.execute(query)
+        teacher_id = result.scalar()
+        teacher_name = await self._get_teacher_name(teacher_id)
+        return teacher_name
 
     async def add_verif_teacher(self, user_id: int, teacher_name: str) -> None:
         """Додає або оновлює верифікацію вчителя"""
