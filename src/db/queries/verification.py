@@ -114,3 +114,17 @@ class TeacherVerificationQueries:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
+
+    async def block_access(self, user_id: int) -> None:
+        """Метод блокує доступ відповідному акаунту"""
+        try:
+            query = (
+                update(TeacherVerificationModel)
+                .where(TeacherVerificationModel.user_id == user_id)
+                .values(is_verified=False)
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise e
