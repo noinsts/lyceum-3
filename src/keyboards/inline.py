@@ -5,7 +5,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .base import BaseKeyboard
 from src.enums import TeacherTypeEnum
-from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback, FormsListCallback
+from src.filters.callbacks import (
+    TeacherCategoryCallback, TeacherListCallback,
+    FormsListCallback, DeveloperBlockEnum, DeveloperBlockCallback
+)
 
 
 class HubAdmin(BaseKeyboard):
@@ -145,6 +148,21 @@ class DeveloperAccessHub(BaseKeyboard):
             [InlineKeyboardButton(text='List', callback_data='dev_access_list')]
         ]
 
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class DeveloperBlockType(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(
+                text="За ID",
+                callback_data=DeveloperBlockCallback(method=DeveloperBlockEnum.BY_ID).pack()
+            )],
+            [InlineKeyboardButton(
+                text="За ім'ям вчителя",
+                callback_data=DeveloperBlockCallback(method=DeveloperBlockEnum.BY_TEACHER_NAME).pack()
+            )]
+        ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
