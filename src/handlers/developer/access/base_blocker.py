@@ -7,8 +7,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
 from ...base import BaseHandler
-from src.filters.callbacks import DeveloperBlockCallback, DeveloperBlockEnum
-from src.keyboards.inline import DeveloperBlockType, SubmitKeyboard
+from src.filters.callbacks import DeveloperSearchCallback, DeveloperSearchEnum
+from src.keyboards.inline import DeveloperSearchType, SubmitKeyboard
 from src.validators import validate_teacher_name, validate_user_id
 from src.db.connector import DBConnector
 from src.states.developer import AccessBlock, AccessUnblock
@@ -76,7 +76,7 @@ class BaseBlockerAccessHandler(BaseHandler, ABC):
 
         self.router.callback_query.register(
             self.get_type,
-            DeveloperBlockCallback.filter(),
+            DeveloperSearchCallback.filter(),
             self.state.waiting_for_type
         )
 
@@ -109,19 +109,19 @@ class BaseBlockerAccessHandler(BaseHandler, ABC):
 
         await callback.message.answer(
             f"Оберіть тип {self.get_action_name()}",
-            reply_markup=DeveloperBlockType().get_keyboard()
+            reply_markup=DeveloperSearchType().get_keyboard()
         )
 
         await callback.answer()
 
-    async def get_type(self, callback: CallbackQuery, callback_data: DeveloperBlockCallback, state: FSMContext) -> None:
+    async def get_type(self, callback: CallbackQuery, callback_data: DeveloperSearchCallback, state: FSMContext) -> None:
         value = callback_data.method
 
         match value:
-            case DeveloperBlockEnum.BY_ID:
+            case DeveloperSearchEnum.BY_ID:
                 response = "Добре, введіть <b>Telegram ID</b> для пошуку"
                 fsm = self.state.waiting_for_user_id
-            case DeveloperBlockEnum.BY_TEACHER_NAME:
+            case DeveloperSearchEnum.BY_TEACHER_NAME:
                 response = "Добре, введіть <b>ім'я вчителя</b> для пошуку"
                 fsm = self.state.waiting_for_teacher_name
             case _:

@@ -7,7 +7,7 @@ from .base import BaseKeyboard
 from src.enums import TeacherTypeEnum
 from src.filters.callbacks import (
     TeacherCategoryCallback, TeacherListCallback,
-    FormsListCallback, DeveloperBlockEnum, DeveloperBlockCallback
+    FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback
 )
 
 
@@ -153,16 +153,16 @@ class DeveloperAccessHub(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
-class DeveloperBlockType(BaseKeyboard):
+class DeveloperSearchType(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
             [InlineKeyboardButton(
                 text="За ID",
-                callback_data=DeveloperBlockCallback(method=DeveloperBlockEnum.BY_ID).pack()
+                callback_data=DeveloperSearchCallback(method=DeveloperSearchEnum.BY_ID).pack()
             )],
             [InlineKeyboardButton(
                 text="За ім'ям вчителя",
-                callback_data=DeveloperBlockCallback(method=DeveloperBlockEnum.BY_TEACHER_NAME).pack()
+                callback_data=DeveloperSearchCallback(method=DeveloperSearchEnum.BY_TEACHER_NAME).pack()
             )]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
