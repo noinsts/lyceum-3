@@ -145,7 +145,9 @@ class DeveloperAccessHub(BaseKeyboard):
         kb = [
             [InlineKeyboardButton(text='Add', callback_data='dev_access_add')],
             [InlineKeyboardButton(text='Block', callback_data='dev_access_block')],
-            [InlineKeyboardButton(text='List', callback_data='dev_access_list')]
+            [InlineKeyboardButton(text='Unblock', callback_data='dev_access_unblock')],
+            [InlineKeyboardButton(text='List', callback_data='dev_access_list')],
+            [InlineKeyboardButton(text='Status', callback_data='dev_access_status')]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
