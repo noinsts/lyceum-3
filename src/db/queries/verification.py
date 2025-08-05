@@ -115,13 +115,13 @@ class TeacherVerificationQueries:
             await self.session.rollback()
             raise e
 
-    async def block_access(self, user_id: int) -> None:
-        """Метод блокує доступ відповідному акаунту"""
+    async def set_access(self, user_id: int, verif: bool) -> None:
+        """Метод встановлює доступ відповідному акаунту"""
         try:
             query = (
                 update(TeacherVerificationModel)
                 .where(TeacherVerificationModel.user_id == user_id)
-                .values(is_verified=False)
+                .values(is_verified=verif)
             )
             await self.session.execute(query)
             await self.session.commit()
