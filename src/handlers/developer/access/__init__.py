@@ -7,6 +7,7 @@ from .add import AddAccessHandler
 from .block import BlockAccessHandler
 from .unblock import UnblockAccessHandler
 from .list import ListAccessHandler
+from .status import StatusAccessHandler
 
 
 def get_access_routers() -> List[Router]:
@@ -16,5 +17,6 @@ def get_access_routers() -> List[Router]:
         AddAccessHandler().get_router(),
         BlockAccessHandler().get_router(),
         UnblockAccessHandler().get_router(),
-        ListAccessHandler().get_router()
+        ListAccessHandler().get_router(),
+        StatusAccessHandler().get_router()
     ]
