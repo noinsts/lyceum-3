@@ -68,6 +68,10 @@ class TeacherVerificationQueries:
         )
         result = await self.session.execute(query)
         teacher_id = result.scalar()
+
+        if teacher_id is None:
+            return None
+
         teacher_name = await self._get_teacher_name(teacher_id)
         return teacher_name
 
