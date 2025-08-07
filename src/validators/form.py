@@ -1,5 +1,7 @@
 import re
 
+from src.exceptions import ValidationError
+
 #: Патерн для перевірки назви класу у форматі "7-А", "11-Б" тощо.
 #: Складається з однієї або двох цифр, дефісу, та однієї української літери.
 FORM_PATTERN = re.compile(
@@ -21,16 +23,23 @@ def validate_form(form: str) -> bool:
         form (str): рядок з класом
 
     Returns:
-        True якщо формат вірний, False інакше
+        True якщо формат вірний
+
+    Raises:
+        ValidationError: якщо валідація не пройшла
     """
 
     if not isinstance(form, str):
-        return False
+        raise ValidationError("Значення має бути рядком")
 
     match = FORM_PATTERN.match(form.strip())
 
     if not match:
-        return False
+        raise ValidationError("Формат класу має бути у вигляді '7-А', '10-Б' тощо")
 
     grade = int(match.group(1))
-    return 5 <= grade <= 11
+
+    if not (5 <= grade <= 11):
+        raise ValidationError(f"Допустимий номер класу — від 5 до 11, отримано: {grade}")
+
+    return True

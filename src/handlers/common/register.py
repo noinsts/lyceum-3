@@ -89,11 +89,11 @@ class RegisterHandler(BaseHandler):
     async def get_class(message: Message, state: FSMContext) -> None:
         """Обробляє введення класу, перевіряє формат, вікове обмеження та наявність класу в базі"""
         form = message.text
-        match = validate_form(form)
 
-        # Якщо введено клас у неправильному форматі
-        if not match:
-            await message.answer("Невірно вказані дані. Вводь щось типу '9-A' 😉")
+        try:
+            validate_form(form)
+        except ValidationError as e:
+            await message.answer(str(e))
             return
 
         # перевірка класу чи є він в школі
