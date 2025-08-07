@@ -134,10 +134,10 @@ class AddAccessHandler(BaseHandler):
 
         user_id = int(user_id)
 
-        teacher_name_validate, reason = await validate_teacher_name(tn, db)
-
-        if not teacher_name_validate:
-            await message.answer(reason)
+        try:
+            await validate_teacher_name(tn, db)
+        except ValidationError as e:
+            await message.answer(str(e))
             return False
 
         await state.update_data(user_id=user_id, teacher_name=tn)

@@ -13,6 +13,7 @@ from src.states import RegisterStates
 from src.keyboards.reply import GetType, GetClass
 from src.enums import DBUserType
 from src.validators import validate_form, validate_student_name, validate_teacher_name
+from src.exceptions import ValidationError
 
 
 USER_TYPE_PRETTY = {
@@ -124,10 +125,11 @@ class RegisterHandler(BaseHandler):
     async def get_teacher_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Запит в учителя його ПІП"""
         teacher_name = message.text
-        match, reason = await validate_teacher_name(teacher_name, db)
 
-        if not match:
-            await message.answer(reason)
+        try:
+            await validate_teacher_name(teacher_name, db)
+        except ValidationError as e:
+            await message.answer(str(e))
             return
 
         # Biletska guard

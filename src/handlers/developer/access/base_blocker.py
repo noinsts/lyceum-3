@@ -161,10 +161,10 @@ class BaseBlockerAccessHandler(BaseHandler, ABC):
     async def get_teacher_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         teacher_name = message.text
 
-        validate, reason = await validate_teacher_name(teacher_name, db)
-
-        if not validate:
-            await message.answer(reason)
+        try:
+            await validate_teacher_name(teacher_name, db)
+        except ValidationError as e:
+            await message.answer(str(e))
             return
 
         user_id = await db.verification.get_user_id(teacher_name)
