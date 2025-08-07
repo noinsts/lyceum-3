@@ -110,10 +110,11 @@ class RegisterHandler(BaseHandler):
 
     async def get_student_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         student_name = message.text
-        match, reason = validate_student_name(student_name)
 
-        if not match:
-            await message.answer(reason)
+        try:
+            validate_student_name(student_name)
+        except ValidationError as e:
+            await message.answer(str(e))
             return
 
         await state.update_data(student_name=student_name)

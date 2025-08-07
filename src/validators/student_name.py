@@ -1,5 +1,6 @@
-from typing import Tuple, Optional
 import re
+
+from src.exceptions import ValidationError
 
 #: Патерн для імені учня: Прізвище Імʼя (без по батькові).
 STUDENT_NAME_PATTERN = re.compile(
@@ -14,7 +15,7 @@ STUDENT_NAME_PATTERN:
 """
 
 
-def validate_student_name(student_name: str) -> Tuple[bool, Optional[str]]:
+def validate_student_name(student_name: str) -> bool:
     """
     Валідує ім'я студенту, наприклад (Остапенко Михайло)
 
@@ -22,20 +23,21 @@ def validate_student_name(student_name: str) -> Tuple[bool, Optional[str]]:
         student_name (str): ім'я студента
 
     Returns:
-        Tuple:
-            bool: чи проходить аргумент перевірка
-            reason: примітки, щодо валідації
+        bool: чи проходить валідація
+
+    Raises:
+        ValidationError: якщо не проходить валідація
     """
 
     if len(student_name) < 3:
-        return False, "Довжина імені має бути більше 3 символів"
+        raise ValidationError("Довжина імені має бути більше 3 символів")
 
     if len(student_name) > 50:
-        return False, "Довжина імені має бути менше 50 символів"
+        raise ValidationError("Довжина імені має бути менше 50 символів")
 
     match = STUDENT_NAME_PATTERN.match(student_name.strip())
 
     if not isinstance(student_name, str) or not match:
-        return False, "Використовуйте формат: \"Прізвище ім'я\""
+        raise ValidationError("Використовуйте формат: \"Прізвище ім'я\"")
 
-    return True, ""
+    return True
