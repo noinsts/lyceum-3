@@ -9,33 +9,50 @@ from src.filters.callbacks import DeveloperSearchCallback, DeveloperSearchEnum
 from src.states.developer import AccessStatus
 from src.db.connector import DBConnector
 from src.validators import validate_user_id, validate_teacher_name
+from src.exceptions import ValidationError
 
-HANDLER_TRIGGER = "dev_access_status"
-DB_EXCEPTION_RESPONSE = "❌ Помилка. В БД немає інформації про верифікацію."
-USER_INFO_TEMPLATE = (
-    "<b>Інформація про користувача.</b>\n\n"
-    "🆔: <code>{user_id}</code>\n"
-    "🧑🏻‍🏫: <code>{teacher_name}</code>\n"
-    "🔐: <code>{status}</code>"
-)
 
-SEARCH_OPTIONS = {
-    DeveloperSearchEnum.BY_ID: {
-        "response": "Добре, введіть <b>Telegram ID</b> для пошуку",
-        "fsm": AccessStatus.waiting_for_user_id
-    },
-    DeveloperSearchEnum.BY_TEACHER_NAME: {
-        "response": "Добре, введіть <b>ім'я вчителя</b> для пошуку",
-        "fsm": AccessStatus.waiting_for_teacher_name
+class Triggers:
+    HANDLER = "dev_access_status"
+
+
+class Messages:
+    HANDLER = (
+        "Вкажіть тип пошуку"
+    )
+
+    ERROR = (
+        "❌ Помилка, куда ви нажмали..."
+    )
+
+    DB_EXCEPTION = (
+        "❌ Помилка. В БД немає інформації про верифікацію."
+    )
+
+    USER_INFO_TEMPLATE = (
+        "<b>Інформація про користувача.</b>\n\n"
+        "🆔: <code>{user_id}</code>\n"
+        "🧑🏻‍🏫: <code>{teacher_name}</code>\n"
+        "🔐: <code>{status}</code>"
+    )
+
+    SEARCH_OPTIONS = {
+        DeveloperSearchEnum.BY_ID: {
+            "response": "Добре, введіть <b>Telegram ID</b> для пошуку",
+            "fsm": AccessStatus.waiting_for_user_id
+        },
+        DeveloperSearchEnum.BY_TEACHER_NAME: {
+            "response": "Добре, введіть <b>ім'я вчителя</b> для пошуку",
+            "fsm": AccessStatus.waiting_for_teacher_name
+        }
     }
-}
 
 
 class StatusAccessHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.callback_query.register(
             self.handler,
-            F.data == HANDLER_TRIGGER
+            F.data == Triggers.HANDLER
         )
 
         self.router.callback_query.register(
@@ -58,19 +75,16 @@ class StatusAccessHandler(BaseHandler):
     async def handler(callback: CallbackQuery, state: FSMContext) -> None:
         await state.set_state(AccessStatus.waiting_for_type)
 
-        await callback.message.answer(
-            "Вкажіть тип пошуку",
-            reply_markup=DeveloperSearchType().get_keyboard()
-        )
+        await callback.message.answer(Messages.HANDLER, reply_markup=DeveloperSearchType().get_keyboard())
         await callback.answer()
 
     @staticmethod
     async def get_type(callback: CallbackQuery, callback_data: DeveloperSearchCallback, state: FSMContext) -> None:
         value = callback_data.method
-        search_data = SEARCH_OPTIONS.get(value)
+        search_data = Messages.SEARCH_OPTIONS.get(value)
 
         if not search_data:
-            await callback.answer("❌ Помилка, куда ви нажмали...", show_alert=True)
+            await callback.answer(Messages.ERROR, show_alert=True)
             return
 
         await state.set_state(search_data["fsm"])
@@ -81,10 +95,10 @@ class StatusAccessHandler(BaseHandler):
     async def get_user_id(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         user_id = message.text
 
-        validate, reason = validate_user_id(user_id)
-
-        if not validate:
-            await message.answer(reason)
+        try:
+            validate_user_id(user_id)
+        except ValidationError as e:
+            await message.answer(str(e))
             return
 
         user_id = int(user_id)
@@ -92,7 +106,7 @@ class StatusAccessHandler(BaseHandler):
         teacher_name = await db.verification.get_teacher_name(user_id)
 
         if not teacher_name:
-            await message.answer(DB_EXCEPTION_RESPONSE)
+            await message.answer(Messages.DB_EXCEPTION)
             return
 
         await state.update_data(user_id=user_id, teacher_name=teacher_name)
@@ -110,7 +124,7 @@ class StatusAccessHandler(BaseHandler):
         user_id = await db.verification.get_user_id(teacher_name)
 
         if not user_id:
-            await message.answer(DB_EXCEPTION_RESPONSE)
+            await message.answer(Messages.DB_EXCEPTION)
             return
 
         await state.update_data(user_id=user_id, teacher_name=teacher_name)
@@ -126,12 +140,12 @@ class StatusAccessHandler(BaseHandler):
         verif = await db.verification.is_verif(user_id, teacher_name)
 
         if verif is None:
-            await message.answer(DB_EXCEPTION_RESPONSE)
+            await message.answer(Messages.DB_EXCEPTION)
             return
 
         status = "Верифіковано" if verif else "Заблоковано"
 
-        response = USER_INFO_TEMPLATE.format(
+        response = Messages.USER_INFO_TEMPLATE.format(
             user_id=user_id,
             teacher_name=teacher_name,
             status=status

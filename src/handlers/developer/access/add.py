@@ -10,6 +10,7 @@ from ...base import BaseHandler
 from src.states import DevAddAccess
 from src.keyboards.inline import SubmitKeyboard
 from src.validators import validate_user_id, validate_teacher_name
+from src.exceptions import ValidationError
 
 
 class Triggers:
@@ -125,10 +126,10 @@ class AddAccessHandler(BaseHandler):
 
         user_id, tn = lines[0], lines[1]
 
-        user_id_validate, reason = validate_user_id(user_id)
-
-        if not user_id_validate:
-            await message.answer(reason)
+        try:
+            validate_user_id(user_id)
+        except ValidationError as e:
+            await message.answer(str(e))
             return False
 
         user_id = int(user_id)

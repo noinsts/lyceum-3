@@ -12,6 +12,7 @@ from src.keyboards.inline import DeveloperSearchType, SubmitKeyboard
 from src.validators import validate_teacher_name, validate_user_id
 from src.db.connector import DBConnector
 from src.states.developer import AccessBlock, AccessUnblock
+from src.exceptions import ValidationError
 
 
 class BaseBlockerAccessHandler(BaseHandler, ABC):
@@ -139,10 +140,10 @@ class BaseBlockerAccessHandler(BaseHandler, ABC):
     async def get_user_id(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         user_id = message.text
 
-        validate, reason = validate_user_id(user_id)
-
-        if not validate:
-            await message.answer(reason)
+        try:
+            validate_user_id(user_id)
+        except ValidationError as e:
+            await message.answer(str(e))
             return
 
         teacher_name = await db.verification.get_teacher_name(int(user_id))
