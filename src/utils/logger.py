@@ -1,30 +1,24 @@
-import logging
-import os
+from loguru import logger
+import sys
+
 
 def setup_logger():
-    logger = logging.getLogger("discord_bot")
-    logger.setLevel(logging.INFO)
+    # Видаляємо стандартний handler
+    logger.remove()
 
-    # Формат логів
-    log_format = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    # Консоль з кольорами
+    logger.add(sys.stderr,
+               format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>")
 
-    # Створюємо директорію, якщо її ще нема
-    log_dir = os.path.join(os.path.dirname(__file__), "..", "..", "log", "debug")
-    os.makedirs(log_dir, exist_ok=True)
+    # Файл з ротацією
+    logger.add("logs/bot.log",
+               rotation="50 MB",
+               retention="2 weeks",
+               compression="zip",
+               format="{time} [{level}] {message}")
 
-    log_file_path = os.path.join(log_dir, "bot.log")
-
-    # 📂 Запис у файл `log/debug/bot.log`
-    file_handler = logging.FileHandler(log_file_path, mode="a")
-    file_handler.setFormatter(log_format)
-
-    # 🖥️ Вивід у консоль
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_format)
-
-    # Додаємо хендлери (попередньо очищаємо старі)
-    if not logger.handlers:
-        logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
+    # Окремо критичні помилки
+    logger.add("logs/critical.log",
+               filter=lambda record: record["level"].name in ["ERROR", "CRITICAL"])
 
     return logger
