@@ -1,8 +1,9 @@
 from typing import List, Optional
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 from .base import BaseKeyboard
+from src.enums import OlympStage
 
 """Registration"""
 
@@ -75,10 +76,5 @@ class SkipButton(BaseKeyboard):
 
 class OlympStages(BaseKeyboard):
     def get_keyboard(self) -> ReplyKeyboardMarkup:
-        kb = [
-            [KeyboardButton(text='Міська')],
-            [KeyboardButton(text='Обласна')],
-            [KeyboardButton(text='Всеукраїнська')]
-        ]
-
+        kb = [[KeyboardButton(text=stage.value) for stage in OlympStage.__members__.values()]]
         return ReplyKeyboardMarkup(keyboard=kb)
