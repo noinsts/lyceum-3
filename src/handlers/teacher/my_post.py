@@ -17,8 +17,11 @@ class MyPostHandler(BaseHandler):
         self.HAPPY_GUY = "CAACAgIAAxkBAAEOZ1loFUxiV3fJxTbJ0Q6iD6LDAkhsxwACBTgAAp17sEknYmmEwwt6pTYE"
 
     def register_handler(self) -> None:
-        # self.router.message.register(self.my_post, F.text == '🚦 Мій пост')
-        pass
+        self.router.message.register(self.handler, F.text == '🚦 Мій пост')
+
+    @staticmethod
+    async def handler(message: Message) -> None:
+        await message.answer("Функція стане доступною після отримання графіку чергування 2025-2026 н. р.")
 
     async def my_post(self, message: Message, db: DBConnector) -> None:
         """Обробник кнопки 🚦 Мій пост"""
