@@ -22,7 +22,7 @@ from src.bot_instance import set_bot
 from src.handlers import get_all_router
 from src.utils import setup_logger
 from src.db.db import create_db
-from src.middlewares import DBMiddleware
+from src.middlewares import DBMiddleware, LoggingMiddleware
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -40,6 +40,10 @@ class LyceumBot:
         # підключення database middleware
         self.dp.message.middleware(DBMiddleware())
         self.dp.callback_query.middleware(DBMiddleware())
+
+        # підключення logging middleware
+        self.dp.message.middleware(LoggingMiddleware())
+        self.dp.callback_query.middleware(LoggingMiddleware())
 
         self.dp.include_router(get_all_router())
 
