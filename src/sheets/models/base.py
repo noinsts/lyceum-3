@@ -10,11 +10,15 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from concurrent.futures import ThreadPoolExecutor
 
+from src.utils import setup_logger
+
 # Ідемо тільки 3 рівні вверх до кореня (lyceum-3)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 # Тепер просто йдемо до creds
 CREDENTIALS_PATH = os.path.join(BASE_DIR, "creds", "credentials.json")
+
+logger = setup_logger()
 
 
 class BaseSheet:
@@ -30,12 +34,15 @@ class BaseSheet:
         self.LENGTH_SHEET = 7
         self.redis = redis
 
-        # Префікс для кешування (відокремлено від FSM)
+        # Префікс для кешування (СПІЛЬНИЙ для всіх моделей цієї таблиці)
         self.cache_prefix = f"sheets_cache:{spreadsheet_id}"
 
         # Rate limiting для Google API
         self._last_request_time = 0
         self._min_request_interval = 0.1  # 100ms між запитами
+
+        # Партнер для спільного кешу (встановлюється в connector.py)
+        self._shared_cache_partner = None
 
     async def initialize(self):
         """Асинхронна ініціалізація Google API"""
@@ -58,7 +65,7 @@ class BaseSheet:
 
             BaseSheet._service = service_data['service']
             BaseSheet._sheet = service_data['sheet']
-            print("Google Sheets API ініціалізовано")
+            logger.info("Google Sheets API ініціалізовано")
 
     def _init_google_service(self):
         """Синхронна ініціалізація Google сервісу"""
@@ -88,7 +95,7 @@ class BaseSheet:
             if cached_data:
                 return json.loads(cached_data)
         except (redis.RedisError, json.JSONDecodeError) as e:
-            print(f"Cache read error: {e}")
+            logger.error(f"Cache read error: {e}")
         return None
 
     async def _save_to_cache(self, cache_key: str, data: List[List[str]]) -> None:
@@ -103,7 +110,7 @@ class BaseSheet:
                 # Без TTL! Кеш живе до manual refresh
             )
         except redis.RedisError as e:
-            print(f"Cache write error: {e}")
+            logger.erorr(f"Cache write error: {e}")
 
     async def _make_sheets_request(self, range_name: str) -> List[List[str]]:
         """Асинхронний запит до Google Sheets API з rate limiting"""
@@ -178,12 +185,12 @@ class BaseSheet:
         return datetime.strptime(start_str, "%H%M").time()
 
     async def refresh_cache(self) -> bool:
-        """MANUAL REFRESH - очищає кеш і перезавантажує дані"""
+        """MANUAL REFRESH - очищає спільний кеш для всіх моделей цієї таблиці"""
         if not self.redis:
             return False
 
         try:
-            # Очищуємо весь кеш цього spreadsheet
+            # Очищуємо весь кеш цього spreadsheet (спільний для student і teacher)
             pattern = f"{self.cache_prefix}:*"
             keys_to_delete = []
 
@@ -194,15 +201,19 @@ class BaseSheet:
             if keys_to_delete:
                 await self.redis.delete(*keys_to_delete)
 
-            print(f"Cache cleared for {self.spreadsheet_id}")
+            logger.info(f"✅ Спільний кеш очищено для {self.spreadsheet_id}")
 
-            # Опціонально: одразу перезавантажити дані
+            # Перезавантажуємо дані (тільки основні методи)
             await self.get_all()
             await self.get_all_new()
 
+            # Якщо є партнер (teacher/student), повідомляємо що кеш очищено
+            if self._shared_cache_partner:
+                logger.info(f"🔄 Кеш оновлено для обох моделей (student + teacher)")
+
             return True
         except redis.RedisError as e:
-            print(f"Refresh cache error: {e}")
+            logger.error(f"❌ Refresh cache error: {e}")
             return False
 
     async def get_cache_stats(self) -> dict:

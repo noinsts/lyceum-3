@@ -6,11 +6,14 @@ import redis.asyncio as redis
 from dotenv import load_dotenv
 
 from src.sheets.models import *
+from src.utils import setup_logger
 
 load_dotenv()
 
 SHEET_ID = os.getenv("SHEET_ID")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+
+logger = setup_logger()
 
 
 class Sheet:
@@ -44,12 +47,11 @@ class Sheet:
                 )
                 # Тестуємо з'єднання
                 await self._redis.ping()
-                print("Redis підключено успішно")
             except Exception as e:
-                print(f"Warning: Redis не доступний ({e})")
+                logger.error(f"Warning: Redis не доступний ({e})")
                 self._redis = None
 
-            # Створюємо sheet об'єкти
+            # Створюємо sheet об'єкти (спільна таблиця!)
             self.student = StudentSheet(
                 spreadsheet_id=SHEET_ID,
                 range_prefix="schedule!",
@@ -62,9 +64,13 @@ class Sheet:
                 redis=self._redis
             )
 
-            # Ініціалізуємо базові класи
+            # Ініціалізуємо базові класи (спільний Google API)
             await self.student.initialize()
             await self.teacher.initialize()
+
+            # Встановлюємо зв'язок між моделями (спільний кеш)
+            self.student._shared_cache_partner = self.teacher
+            self.teacher._shared_cache_partner = self.student
 
             self._initialized = True
 
@@ -96,3 +102,10 @@ async def get_redis() -> Optional[redis.Redis]:
     """Отримати Redis для FSM aiogram"""
     sheet = await get_sheet()
     return sheet.redis
+
+
+async def refresh_all_schedule() -> bool:
+    """Оновити розклад для всіх моделей (спільна таблиця)"""
+    sheet = await get_sheet()
+    # Робимо refresh тільки для однієї моделі, бо таблиця спільна
+    return await sheet.student.refresh_cache()
