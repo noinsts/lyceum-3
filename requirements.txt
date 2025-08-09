@@ -14,3 +14,4 @@ psycopg2-binary
 asyncpg
 pydantic
 loguru
+redis
