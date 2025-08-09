@@ -5,9 +5,9 @@ from src.utils import JSONLoader, WeekFormat
 
 
 class TeacherSheet(BaseSheet):
-    def get_lessons(self, tn: str, day: Optional[str] = None) -> List[Tuple] | None: 
+    # TODO: зробить метод пошуку уроків для нового розкладу
 
-    def my_classes(self, teacher_name: str) -> List:
+    async def my_classes(self, teacher_name: str) -> Optional[List]:
         """
         Метод пошуку класів, у яких веде вчитель
 
@@ -19,7 +19,7 @@ class TeacherSheet(BaseSheet):
 
         """
 
-        data = self.get_all_new()
+        data = await self.get_all_new()
 
         if data is None or len(data) < 5:
             return []
@@ -30,19 +30,32 @@ class TeacherSheet(BaseSheet):
         start_column = 2  # тому що стартуємо з другої, класна в нас таблиця просто
 
         for col_offset, name in enumerate(teachers_row):
-            if name.strip() == teacher_name.strip():
-                col_index = start_column + col_offset
-                for row in data[3:]:
-                    if col_index > len(row):
-                        continue
-                    class_name = row[col_index].strip()
-                    # TODO: зробить парсер, бо в ячеці не тільки клас, а і предмет
-                    if class_name:
-                        results.add(class_name)
+            if name.strip() != teacher_name.strip():
+                continue
+
+            col_index = start_column + col_offset
+
+            for row in data[3:]:
+                if col_index > len(row):
+                    continue
+
+                class_name = row[col_index].strip()
+
+                # TODO: зробить парсер, бо в ячеці не тільки клас, а і предмет
+
+                # наприклад повернення масиву з класами, бо там можливо їх декілька
+
+                # це може бути, тоді коли є розділювач |
+
+                if class_name:
+                    results.add(class_name)
 
         return sorted(results)
 
-    def get_lessons(self, tn: str, day: Optional[str] = None) -> List[Tuple] | None:
+    async def get_new_lessons(self, teacher_name: str, day: Optional[str] = None) -> Optional[List[Tuple]]:
+        pass
+
+    async def get_lessons(self, tn: str, day: Optional[str] = None) -> List[Tuple] | None:
         # OLD SCHEDULE
 
         """
@@ -60,7 +73,7 @@ class TeacherSheet(BaseSheet):
 
         results = []
 
-        for row in self.get_all():
+        for row in await self.get_all():
             if len(row) < self.LENGTH_SHEET:
                 continue
 
@@ -73,7 +86,6 @@ class TeacherSheet(BaseSheet):
                 subject,
                 teacher
             ) = row[:7]
-
 
             if day is not None and day.strip().upper() != day_of_week.strip().upper():
                 continue
