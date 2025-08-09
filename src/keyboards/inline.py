@@ -31,6 +31,15 @@ class HubAdminSchedule(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
+class RedisControlPanel(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='📊 Cache Stats', callback_data="redis_cache_stats")],
+            [InlineKeyboardButton(text='🗒 Get Schedule', callback_data="redis_get_schedule")]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
 class AdminAnnouncementHub(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
