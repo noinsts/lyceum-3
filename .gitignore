@@ -6,3 +6,6 @@
 /creds
 *.pyc
 .env
+/settings/admins.py
+/settings/developers.py
+/logs
