@@ -1,6 +1,7 @@
 import re
-from typing import List
-from datetime import datetime
+from typing import List, Optional
+from enum import Enum
+from dataclasses import dataclass
 
 from aiogram import F
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
@@ -15,296 +16,294 @@ from src.keyboards.inline import SubmitKeyboard
 from src.responses import TeacherVerify
 from src.db.connector import DBConnector
 from src.db.schemas import AddOlymp
+from src.validators import validate_date, validate_form, validate_student_name
+from src.parsers.frontend import parse_date
+from src.decorators import with_validation, next_state
+from src.enums import OlympStage
+
+
+# =====================
+# Константи та Enum-и
+# =====================
+
+
+class Triggers(str, Enum):
+    HANDLER = "create_new_olymp"
+    SUBMIT = "create_olymp_submit"
+    CANCEL = "create_olymp_cancel"
+
+
+@dataclass(frozen=True)
+class Messages:
+    SELECT_SUBJECT: str = (
+        "Оберіть предмет зі списку нижче, <b>поки це не працює, тож просто введіть його</b>"
+    )
+
+    SELECT_FORM: str = (
+        "Добре, оберіть клас зі списку"
+    )
+
+    INPUT_FORM: str = (
+        "Введіть клас в форматі \"8-А\""
+    )
+
+    INPUT_STUDENT_NAMES: str = (
+        "Замєчатєльно! Запишіть ПІ всіх учнів через кому.\n"
+        "Наприклад: \"Рибалка Поліна, Шостак Андрій, Микитенко Арсен, Лепський Артем\""
+    )
+
+    STUDENT_NAME_VALIDATION_ERROR: str = (
+        "❌ Будь ласка, введіть імена учнів у правильному форматі"
+    )
+
+    INPUT_OLYMP_STAGE: str = (
+        "Додано {count} учнів. Оберіть нижче етап олімпіади"
+    )
+
+    OLYMP_STAGE_EXCEPTION: str = (
+        "❌ Вкажіть вірний етап олімпіади."
+    )
+
+    INPUT_DATE: str = (
+        "Введіть дату проведення олімпіади в форматі \"ДД-ММ-РРРР\" (наприклад: 20-05-2025)"
+    )
+
+    INPUT_NOTE: str = (
+        "Додайте коментар, який буде видно всім учням, яких ви запросили на олімпіаду, "
+        "якщо не хочете нічого додавати, то натисніть на кнопку нижче"
+    )
+
+    SKIP_BUTTON_TEXT = (
+        "🚫 Пропустити"
+    )
+
+    CONFIRMATION_TEXT: str = (
+        "📋 <b>Перевірка введених даних:</b>\n\n"
+        "📚 <b>Предмет:</b> {subject}\n"
+        "🏫 <b>Клас:</b> {form}\n"
+        "👥 <b>Учасники:</b> {student_names}\n"
+        "🏆 <b>Етап олімпіади:</b> {olymp_stage}\n"
+        "📅 <b>Дата:</b> {date}\n"
+        "📝 <b>Примітка:</b> {note}\n\n"
+        "<i>все вірно?</i>"
+    )
+
+    SUCCESS: str = (
+        "✅ Олімпіаду успішно створено."
+    )
+
+    CREATE_OLYMP_EXCEPTION: str = (
+        "❌ Помилка при створенні олімпіади. Спробуйте знову."
+    )
+
+    CANCEL: str = (
+        "✖️ Скасовано."
+    )
+
+
+# =================
+# Основний клас
+# =================
 
 
 class CreateHandler(BaseHandler):
-    # Константи для валідації
-    DATE_PATTERN = r'^\d{2}-\d{2}-\d{4}$'
-    SKIP_BUTTON_TEXT = "🚫 Пропустити"
-
     def register_handler(self) -> None:
         self.router.callback_query.register(
             self.handler,
-            F.data == 'create_new_olymp'
+            F.data == Triggers.HANDLER
         )
 
-        self.router.message.register(
-            self.subject,
-            CreateOlympStates.waiting_for_subject
-        )
+        self._register_step_handlers()
+        self._register_confirmation_handlers()
 
-        self.router.message.register(
-            self.form,
-            CreateOlympStates.waiting_for_form
-        )
+    def _register_step_handlers(self) -> None:
+        handlers_config = [
+            (self.subject, CreateOlympStates.waiting_for_subject),
+            (self.form, CreateOlympStates.waiting_for_form),
+            (self.student_name, CreateOlympStates.waiting_for_student_name),
+            (self.olymp_stage, CreateOlympStates.waiting_for_olymp_stage),
+            (self.date, CreateOlympStates.waiting_for_date),
+            (self.note, CreateOlympStates.waiting_for_note),
+            (self.show_confirmation, CreateOlympStates.confirm_creating)
+        ]
 
-        self.router.message.register(
-            self.student_name,
-            CreateOlympStates.waiting_for_student_name
-        )
+        for handler, state in handlers_config:
+            self.router.message.register(handler, state)
 
-        self.router.message.register(
-            self.olymp_stage,
-            CreateOlympStates.waiting_for_olymp_stage
-        )
-
-        self.router.message.register(
-            self.date,
-            CreateOlympStates.waiting_for_date
-        )
-
-        self.router.message.register(
-            self.note,
-            CreateOlympStates.waiting_for_note
-        )
-
-        self.router.message.register(
-            self.confirm,
+    def _register_confirmation_handlers(self) -> None:
+        self.router.callback_query.register(
+            self.submit_olympiad,
+            F.data == Triggers.SUBMIT,
             CreateOlympStates.confirm_creating
         )
 
         self.router.callback_query.register(
-            self.submit,
-            F.data == 'olymp_submit',
+            self.cancel_creation,
+            F.data == Triggers.CANCEL,
             CreateOlympStates.confirm_creating
         )
 
-        self.router.callback_query.register(
-            self.cancel,
-            F.data == 'olymp_cancel',
-            CreateOlympStates.confirm_creating
-        )
+    # ===================
+    # Кроки форми
+    # ===================
 
+    @next_state(CreateOlympStates.waiting_for_subject)
     async def handler(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
-        """Початковий хендлер для створення олімпіади"""
-        await callback.answer("")
+        """Початок створення олімпіади"""
+        await callback.answer()
 
-        # Перевірка верифікації
         teacher_name = await db.register.get_teacher_name(callback.from_user.id)
-        verif = await db.verification.is_verif(callback.from_user.id, teacher_name)
+        is_verified = await db.verification.is_verif(callback.from_user.id, teacher_name)
 
-        if verif:
-            await state.update_data(teacher_name=teacher_name)
-            await self._start_olympiad_creation(callback, state)
-        else:
+        if not is_verified:
             await TeacherVerify.send_msg(callback)
-
-    @staticmethod
-    async def _start_olympiad_creation(callback: CallbackQuery, state: FSMContext) -> None:
-        """Розпочинає процес створення олімпіади"""
-        await state.set_state(CreateOlympStates.waiting_for_subject)
-        await callback.message.answer(
-            "Оберіть предмет зі списку нижче, <b>поки це не працює, тож просто введіть його</b>",
-            # TODO: зробить список предметів, які веде вчитель
-            # через google sheet запит
-            parse_mode=ParseMode.HTML
-        )
-
-    async def subject(self, message: Message, state: FSMContext) -> None:
-        """Оброблює введення предмета"""
-        if not self._validate_subject(message.text):
-            await message.answer("❌ Будь ласка, введіть коректну назву предмета")
             return
 
-        await state.update_data(subject=message.text.strip())
-        await state.set_state(CreateOlympStates.waiting_for_form)
+        await state.update_data(teacher_name=teacher_name)
+        await callback.message.answer(Messages.SELECT_SUBJECT, parse_mode=ParseMode.HTML)
 
-        data = await state.get_data()
-        teacher_name = data.get("teacher_name")
+    @next_state(CreateOlympStates.waiting_for_form)
+    async def subject(self, message: Message, state: FSMContext) -> None:
+        """Оброблює введення предмета"""
+        await state.update_data(subject=message.text.strip())
+        # TODO: в майбутньому додати валідатор по sheet
+
+        teacher_name = (await state.get_data()).get("teacher_name")
         forms = self.sheet.teacher.my_classes(teacher_name)
 
         if forms:
-            prompt = "Добре, оберіть клас зі списку"
-            rm = GetClass().get_keyboard(forms)
+            await message.answer(
+                Messages.SELECT_FORM,
+                reply_markup=GetClass().get_keyboard(forms),
+                parse_mode=ParseMode.HTML
+            )
         else:
-            prompt = "Введіть клас в форматі \"8-А\""
-            rm = None
+            await message.answer(Messages.INPUT_FORM, parse_mode=ParseMode.HTML)
 
-        await message.answer(
-            prompt,
-            reply_markup=rm,
-            parse_mode=ParseMode.HTML
-        )
-
-    async def form(self, message: Message, state: FSMContext) -> None:
+    @classmethod
+    @next_state(CreateOlympStates.waiting_for_student_name)
+    @with_validation(validate_form)
+    async def form(cls, message: Message, state: FSMContext) -> None:
         """Оброблює введення класу"""
-        if not self._validate_form(message.text):
-            await message.answer("❌ Будь ласка, введіть коректний клас (наприклад: 10-А)")
-            return
+        await state.update_data(form=message.text.strip())
+        await message.answer(Messages.INPUT_STUDENT_NAMES)
 
-        await state.update_data(form=message.text)
-        await state.set_state(CreateOlympStates.waiting_for_student_name)
-
-        await message.answer(
-            "Замєчатєльно! Запишіть ПІ всіх учнів через кому.\n"
-            "Наприклад: \"Рибалка Поліна, Шостак Андрій, Микитенко Арсен, Лепський Артем\""
-        )
-
+    @next_state(CreateOlympStates.waiting_for_olymp_stage)
     async def student_name(self, message: Message, state: FSMContext) -> None:
         """Оброблює введення імен учнів"""
-        students = self._parse_student_names(message.text)
+        students = self._parse_and_validate_students(message.text)
 
         if not students:
-            await message.answer("❌ Будь ласка, введіть імена учнів у правильному форматі")
+            await message.answer(Messages.STUDENT_NAME_VALIDATION_ERROR)
             return
 
-        await state.update_data(student_name=message.text)
-        await state.set_state(CreateOlympStates.waiting_for_olymp_stage)
+        await state.update_data(student_names=message.text.strip())
 
         await message.answer(
-            f"Додано {len(students)} учнів. Оберіть нижче етап олімпіади",
+            Messages.INPUT_OLYMP_STAGE.format(count=len(students)),
             reply_markup=OlympStages().get_keyboard()
         )
 
-    @staticmethod
-    async def olymp_stage(message: Message, state: FSMContext) -> None:
+    @classmethod
+    @next_state(CreateOlympStates.waiting_for_date)
+    async def olymp_stage(cls, message: Message, state: FSMContext) -> None:
         """Оброблює вибір етапу олімпіади"""
-        await state.update_data(olymp_stage=message.text)
-        await state.set_state(CreateOlympStates.waiting_for_date)
+        try:
+            await state.update_data(olymp_stage=OlympStage(message.text).value)
+            await message.answer(Messages.INPUT_DATE, reply_markup=ReplyKeyboardRemove())
+        except ValueError:
+            await message.answer(Messages.OLYMP_STAGE_EXCEPTION)
 
-        await message.answer(
-            "Введіть дату проведення олімпіади в форматі \"ДД-ММ-РРРР\" (наприклад: 20-05-2025)",
-            reply_markup=ReplyKeyboardRemove()
-        )
-
-    async def date(self, message: Message, state: FSMContext) -> None:
+    @classmethod
+    @next_state(CreateOlympStates.waiting_for_note)
+    @with_validation(validate_date)
+    async def date(cls, message: Message, state: FSMContext) -> None:
         """Оброблює введення дати"""
-        if not self._validate_date(message.text):
-            await message.answer(
-                "❌ Некоректний формат дати. Використовуйте формат ДД-ММ-РРРР (наприклад: 20-05-2025)"
-            )
-            return
-
-        date = self._parse_date(message.text)
-
+        date = parse_date(message.text)
         await state.update_data(date=date)
-        await state.set_state(CreateOlympStates.waiting_for_note)
+        await message.answer(Messages.INPUT_NOTE, reply_markup=SkipButton().get_keyboard())
 
-        await message.answer(
-            "Додайте коментар, який буде видно всім учням, яких ви запросили на олімпіаду, "
-            "якщо не хочете нічого додавати, то натисніть на кнопку нижче",
-            reply_markup=SkipButton().get_keyboard()
-        )
-
+    @next_state(CreateOlympStates.confirm_creating)
     async def note(self, message: Message, state: FSMContext) -> None:
         """Оброблює введення примітки"""
-        note = None if message.text == self.SKIP_BUTTON_TEXT else message.text.strip()
-
+        note = None if message.text == Messages.SKIP_BUTTON_TEXT else message.text.strip()
         await state.update_data(note=note)
-        await state.set_state(CreateOlympStates.confirm_creating)
-        await self.confirm(message, state)
+        await self.show_confirmation(message, state)
 
-    async def confirm(self, message: Message, state: FSMContext) -> None:
+    async def show_confirmation(self, message: Message, state: FSMContext) -> None:
         """Показує підтвердження введених даних"""
         data = await state.get_data()
-
         text = self._format_confirmation_text(data)
 
         await message.answer(
             text,
-            reply_markup=SubmitKeyboard().get_keyboard(
-                submit_cb="olymp_submit", cancel_cb="olymp_cancel"
-            ),
+            reply_markup=SubmitKeyboard().get_keyboard(Triggers.SUBMIT, Triggers.CANCEL),
             parse_mode=ParseMode.HTML
         )
 
-    async def submit(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
-        await callback.answer("")
+    # =================================
+    # Підтвердження та створення
+    # =================================
+
+    async def submit_olympiad(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
+        await callback.answer()
 
         try:
             data = await state.get_data()
             await self._create_olympiad(data, db)
 
             await callback.message.answer(
-                "✅ Олімпіаду успішно створено.",
+                Messages.SUCCESS,
                 reply_markup=await parse_hub_keyboard(callback.from_user.id)
             )
-
         except Exception as e:
-            await callback.message.answer(
-                "❌ Помилка при створенні олімпіади. Спробуйте знову."
-            )
-            self.log.error(f"Error creating olympiad: {e}")
+            self.log.error(f"Error creating olympiad: {e}", exc_info=True)
+            await callback.message.answer(Messages.CREATE_OLYMP_EXCEPTION)
         finally:
             await state.clear()
 
-    @staticmethod
-    async def cancel(callback: CallbackQuery, state: FSMContext) -> None:
+    @classmethod
+    async def cancel_creation(cls, callback: CallbackQuery, state: FSMContext) -> None:
         """Скасовує створенн олімпіади"""
-        await callback.answer("")
-        await state.set_state(CreateOlympStates.waiting_for_subject)
-        await callback.message.answer("Добре, введіть предмет ще раз")
+        await state.clear()
+        await callback.answer(Messages.CANCEL)
 
-    # Приватні методи для валідації та парсингу
-
-    @staticmethod
-    def _validate_subject(subject: str) -> bool:
-        """Валідує назву предмета"""
-        return bool(subject and subject.strip() and len(subject.strip()) >= 2)
+    # ======================
+    # Допоміжні методи
+    # ======================
 
     @staticmethod
-    def _validate_form(form: str) -> bool:
-        """Валідує клас"""
-        return bool(form and form.strip() and len(form.strip()) >= 2)
-        # FIXME: замінити методом з register.py
+    def _parse_and_validate_students(text: str) -> Optional[List[str]]:
+        students = [n.strip() for n in text.split(",") if n.strip()]
+        return students if all(validate_student_name(s) for s in students) else None
 
-    @staticmethod
-    def _parse_student_names(names_str: str) -> List[str]:
-        if not names_str:
-            return []
-
-        names = [name.strip() for name in names_str.split(',')]
-        return [name for name in names if name and len(name) >= 2]
-
-    def _validate_date(self, date_str: str) -> bool:
-        if not re.match(self.DATE_PATTERN, date_str):
-            return False
-
-        try:
-            day, month, year = map(int, date_str.split('-'))
-            datetime(year, month, day)
-            return True
-        except ValueError:
-            return False
-
-    @staticmethod
-    def _parse_date(date_str: str) -> datetime.strptime:
-        return datetime.strptime(date_str, "%d-%m-%Y").date()
-
-    @staticmethod
-    def _format_confirmation_text(data: dict) -> str:
+    @classmethod
+    def _format_confirmation_text(cls, data: dict) -> str:
         """Форматує текст підтвердження"""
-        return (
-            f"📋 <b>Перевірка введених даних:</b>\n\n"
-            f"📚 <b>Предмет:</b> {data.get('subject')}\n"
-            f"🏫 <b>Клас:</b> {data.get('form')}\n"
-            f"👥 <b>Учасники:</b> {data.get('student_name')}\n"
-            f"🏆 <b>Етап олімпіади:</b> {data.get('olymp_stage')}\n"
-            f"📅 <b>Дата:</b> {data.get('date')}\n"
-            f"📝 <b>Примітка:</b> {data.get('note') or '—'}\n\n"
-            f"<i>все вірно?</i>"
+        return Messages.CONFIRMATION_TEXT.format(
+            subject=data.get("subject"),
+            form=data.get("form"),
+            student_name=data.get("student_names"),
+            olymp_stage=data.get("olymp_stage"),
+            date=data.get("date"),
+            note=data.get("note") or "—"
         )
 
-    @staticmethod
-    async def _create_olympiad(data: dict, db: DBConnector) -> None:
+    @classmethod
+    async def _create_olympiad(cls, data: dict, db: DBConnector) -> None:
         """Створення олімпіади в базі даних"""
-        form = data.get("form")
-        student_names = data.get("student_name").split(", ")
-        teacher_name = data.get("teacher_name")
-        subject = data.get("subject")
-        stage_olymp = data.get("olymp_stage")
-        date = data.get("date")
-        note = data.get("note")
+        student_names = re.split(r'\s*, \s*', data.get("student_names").strip())
 
-        for student in student_names:
+        olymp_data = {
+            'form': data.get("form"),
+            'teacher_name': data.get("teacher_name"),
+            'subject': data.get("subject"),
+            'stage_olymp': data.get("olymp_stage"),
+            'date': data.get("date"),
+            'note': data.get("note")
+        }
+
+        for student_name in student_names:
             await db.olymp.add_member(
-                AddOlymp(
-                    form=form,
-                    student_name=student,
-                    teacher_name=teacher_name,
-                    subject=subject,
-                    stage_olymp=stage_olymp,
-                    date=date,
-                    note=note
-                )
+                AddOlymp(student_name=student_name, **olymp_data)
             )
