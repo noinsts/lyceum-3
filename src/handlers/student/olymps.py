@@ -5,7 +5,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import Message
 
 from ..base import BaseHandler
-from db.connector import DBConnector
+from src.db.connector import DBConnector
 from src.exceptions import ValidationError
 
 

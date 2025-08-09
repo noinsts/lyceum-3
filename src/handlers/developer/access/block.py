@@ -1,7 +1,7 @@
 from typing import Type
 
 from .base_blocker import BaseBlockerAccessHandler
-from db.connector import DBConnector
+from src.db.connector import DBConnector
 from src.states.developer import AccessBlock, AccessUnblock
 
 

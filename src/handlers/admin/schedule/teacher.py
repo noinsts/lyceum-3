@@ -6,7 +6,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
-from db.connector import DBConnector
+from src.db.connector import DBConnector
 from ...base import BaseHandler
 from src.states.admin import TeacherSchedule
 from src.keyboards.inline import TeacherTypes, TeacherList, AdminTeacherBackToCategory, SubmitKeyboard

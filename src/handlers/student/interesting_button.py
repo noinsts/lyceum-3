@@ -2,7 +2,7 @@ from aiogram import F
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 
-from handlers.base import BaseHandler
+from src.handlers.base import BaseHandler
 
 
 class InterestingButtonHandler(BaseHandler):

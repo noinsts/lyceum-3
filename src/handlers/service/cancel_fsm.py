@@ -2,7 +2,7 @@ from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from handlers.base import BaseHandler
+from src.handlers.base import BaseHandler
 
 
 class CancelFSMHandler(BaseHandler):
