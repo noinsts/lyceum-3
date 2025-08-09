@@ -9,7 +9,7 @@ from src.parsers.backend import ScheduleParsers
 class StudentSheet(BaseSheet):
     LENGTH_SHEET = 7
 
-    def get_lessons(self, form: str, day: Optional[str] = None) -> List[Tuple]:
+    async def get_lessons(self, form: str, day: Optional[str] = None) -> List[Tuple]:
         """
         Повертає розклад для вказаного класу.
 
@@ -26,7 +26,7 @@ class StudentSheet(BaseSheet):
                 - Якщо day не вказаний: [(день, номер_уроку, предмет, вчитель), ...]
         """
 
-        data = self.get_all_new()
+        data = await self.get_all_new()
 
         if not data or len(data) < 5:
             return []
