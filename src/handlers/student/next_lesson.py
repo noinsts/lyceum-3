@@ -14,9 +14,13 @@ class NextLessonHandler(BaseHandler):
         self.WEEKEND_PROMPT = "Вихідний! Have a rest"
 
     def register_handler(self) -> None:
-        self.router.message.register(self.next_lesson, F.text == '➡️ Наступний урок')
+        self.router.message.register(self.handler, F.text == '➡️ Наступний урок')
 
-    async def next_lesson(self, message: Message, db: DBConnector) -> None:
+    @classmethod
+    async def handler(cls, message: Message) -> None:
+        await message.answer("🔐 Цей розділ зачинений до кращих часів.")
+
+    async def legacy(self, message: Message, db: DBConnector) -> None:
         """Обробка кнопки ➡️ Наступний урок"""
         user_class = await db.register.get_form(message.from_user.id)
 
