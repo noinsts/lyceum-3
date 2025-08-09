@@ -1,4 +1,6 @@
 from collections import defaultdict
+from enum import Enum
+from dataclasses import dataclass
 
 from aiogram import F
 from aiogram.types import Message
@@ -11,20 +13,44 @@ from src.db.connector import DBConnector
 WEEKDAYS = ('ПОНЕДІЛОК', 'ВІВТОРОК', 'СЕРЕДА', 'ЧЕТВЕР', "П'ЯТНИЦЯ")
 
 
+class Triggers(str, Enum):
+    HANDLER = "📝 Розклад на весь тиждень"
+
+
+@dataclass(frozen=True)
+class Messages:
+    NO_FORM = (
+        "Вашого класу немає в БД. Будь-ласка зареєструйтесь знову, "
+        "використовуючи команду /register"
+    )
+
+    NO_RESULT = (
+        "У вас немає уроків.Дивно, правда?)"
+    )
+
+
 class AllWeekHandler(BaseHandler):
     def register_handler(self):
-        self.router.message.register(self.all_week, F.text == '📝 Розклад на весь тиждень')
+        self.router.message.register(
+            self.all_week,
+            F.text == Triggers.HANDLER
+        )
 
     async def all_week(self, message: Message, db: DBConnector) -> None:
         """
         Обробка відправлення студенту розкладу на весь тиждень
         """
+        user_form = await db.register.get_form(message.from_user.id)
 
-        user_class = await db.register.get_form(message.from_user.id)
-        results = self.sheet.student.get_lessons(user_class)
+        if not user_form:
+            await message.answer(Messages.NO_FORM)
+            return
+
+        sheet = await self.get_sheet()
+        results = await sheet.student.get_lessons(user_form)
 
         if not results:
-            await message.answer("У вас немає уроків. Дивно, правда?)")
+            await message.answer(Messages.NO_RESULT)
             return
 
         # сортуємо по днях
@@ -32,8 +58,7 @@ class AllWeekHandler(BaseHandler):
         for day, number, subject, teacher in results:
             lessons_by_day[day].append((number, subject, teacher))
 
-        # початок повідомлення
-        prompt = f"<b>Список уроків {user_class} класу</b>\n"
+        prompt = f"<b>Список уроків {user_form} класу</b>\n"
 
         # завантажуємо файл з орудними відмінками
         instrumental_names = JSONLoader("settings/instrumental_teacher_names.json")
@@ -44,14 +69,6 @@ class AllWeekHandler(BaseHandler):
 
             prompt += f"\n<b>{day.capitalize()}</b>\n"
             for number, subject, teacher in sorted(lessons_by_day[day]):
-                # парсимо дані відповідно до тижня
-                subject, teacher = self.wf.student(subject, teacher)
-
-                if not subject:
-                    continue
-
-                # TODO: винести парсер в окремий файл
-                # парсомо імена вчителів за орудним відмінком
                 teacher_names = [
                     instrumental_names.get(t.strip(), t.strip())
                     for t in teacher.split(',')
@@ -60,8 +77,4 @@ class AllWeekHandler(BaseHandler):
                 teacher_string = " та ".join(teacher_names)
                 prompt += f"<b>{number}</b>: {subject} з {teacher_string}\n"
 
-        # виводимо дані
-        await message.answer(
-            prompt,
-            parse_mode=ParseMode.HTML
-        )
+        await message.answer(prompt, parse_mode=ParseMode.HTML)
