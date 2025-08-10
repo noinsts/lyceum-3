@@ -5,6 +5,12 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from .base import BaseKeyboard
 from src.enums import OlympStage
 
+
+class UniversalKeyboard(BaseKeyboard):
+    def get_keyboard(self, arr: Optional[List] = None) -> ReplyKeyboardMarkup:
+        kb = [[KeyboardButton(text=obj) for obj in arr]]
+        return ReplyKeyboardMarkup(keyboard=kb)
+
 """Registration"""
 
 
