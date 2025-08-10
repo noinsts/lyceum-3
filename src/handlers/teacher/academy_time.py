@@ -1,17 +1,38 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
+from typing import List, Tuple
+from dataclasses import dataclass
+from enum import Enum
 
 from aiogram import F
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
-from src.utils import WeekFormat
+from src.parsers.backend import ScheduleParsers
 from src.db.connector import DBConnector
 
 
-class AcademyTime(BaseHandler):
+WEEKDAYS = ('ПОНЕДІЛОК', 'ВІВТОРОК', 'СЕРЕДА', 'ЧЕТВЕР', "П'ЯТНИЦЯ")
+
+
+class Triggers(str, Enum):
+    HANDLER = "⏰ Кількість академічних годин"
+
+
+@dataclass(frozen=True)
+class Messages:
+    NO_RESULTS = "Схоже, що цього тижня уроків у вас немає."
+
+    TITLE = "⏰ <b>Кількість академічних годин на тиждень</b>"
+
+
+
+class AcademyTimeHandler(BaseHandler):
     def register_handler(self) -> None:
-        self.router.message.register(self.academy_time, F.text == '⏰ Кількість академічних годин')
+        self.router.message.register(
+            self.academy_time,
+            F.text == Triggers.HANDLER
+        )
 
     async def academy_time(self, message: Message, db: DBConnector) -> None:
         """
@@ -25,24 +46,38 @@ class AcademyTime(BaseHandler):
         """
 
         tn = await db.register.get_teacher_name(message.from_user.id)
-        results = self.sheet.teacher.get_lessons(tn)
 
-        count_by_day = defaultdict(int)
+        sheet = await self.get_sheet()
+        results = await sheet.teacher.get_lessons(tn)
 
-        for day, _, _, _ in results:
-            count_by_day[day] += 1
+        if not results:
+            await message.answer(Messages.NO_RESULTS)
+            return
 
-        prompt = "⏰ <b>Кількість академічних годин на тиждень</b>\n"
+        count_by_day, total = self._count_academic_hours(results)
 
-        wf = "чисельником" if WeekFormat().week() == 0 else "знаменником"
-        prompt += f"<i>за {wf}</i>\n\n"
+        wf = "чисельником" if ScheduleParsers.week() == 0 else "знаменником"
 
-        for day, count in count_by_day.items():
-            prompt += f"<b>{day.capitalize()}</b>: {count} академ. годин\n"
+        lines = [
+            Messages.TITLE,
+            f"<i>за {wf}</i>\n"
+        ]
 
-        prompt += f"\n<b>Всього за тиждень</b>: {len(results)} год."
+        for day in WEEKDAYS:
+            if day not in count_by_day:
+                continue
 
-        await message.answer(
-            prompt,
-            parse_mode=ParseMode.HTML
-        )
+            count = count_by_day[day]
+            lines.append(f"<b>{day.capitalize()}</b>: {count} академ. годин")
+
+        lines.append(f"\n<b>Всього за тиждень</b>: {total} год.")
+
+        prompt = "\n".join(lines)
+        await message.answer(prompt, parse_mode=ParseMode.HTML)
+
+    @classmethod
+    def _count_academic_hours(cls, lessons: List[Tuple]) -> Tuple[defaultdict[str, int], int]:
+        days = (day for day, *_ in lessons)
+        count_by_day = Counter(days)
+        total = sum(count_by_day.values())
+        return defaultdict(int, count_by_day), total
