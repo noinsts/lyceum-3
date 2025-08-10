@@ -1,22 +1,29 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Literal
 
 from .base import BaseSheet
 from src.utils import JSONLoader, WeekFormat
+from ...parsers.backend import ScheduleParsers
 
 
 class TeacherSheet(BaseSheet):
-    # TODO: зробить метод пошуку уроків для нового розкладу
+    """
+    Клас оброблює методи розкладу для вчителів
+    """
 
-    async def my_classes(self, teacher_name: str) -> Optional[List]:
+    async def my_forms_or_subjects(
+            self,
+            teacher_name: str,
+            return_type: Literal["form", "subject"] = "form"
+    ) -> Optional[List[str]]:
         """
         Метод пошуку класів, у яких веде вчитель
 
         Args:
             teacher_name (str): Повне ім'я вчителя (наприклад, "Іванов Іван Іванович")
+            return_type (Literal["form", "subject"]): Визначає що саме повертати.
 
         Returns:
             List[str]: Унікальні назви класів, у яких веде вчитель
-
         """
 
         data = await self.get_all_new()
@@ -25,37 +32,37 @@ class TeacherSheet(BaseSheet):
             return []
 
         results = set()
-        # стартуєм з імен вчителів (особливості таблиці)
-        teachers_row = data[2][2:]
-        start_column = 2  # тому що стартуємо з другої, класна в нас таблиця просто
+        parser = ScheduleParsers()
 
-        for col_offset, name in enumerate(teachers_row):
-            if name.strip() != teacher_name.strip():
+        teachers_row = data[2]
+        teacher_col_index = -1
+
+        for i, name in enumerate(teachers_row):
+            if name and name.strip().lower() == teacher_name.strip().lower():
+                teacher_col_index = i
+                break
+
+        if teacher_col_index == -1:
+            return []
+
+        for row in data[3:]:
+            if teacher_col_index >= len(row):
                 continue
 
-            col_index = start_column + col_offset
+            cell_value = row[teacher_col_index].strip()
 
-            for row in data[3:]:
-                if col_index > len(row):
-                    continue
+            if not cell_value:
+                continue
 
-                class_name = row[col_index].strip()
+            parsed_data = parser.parse_cell_value(cell_value)
 
-                # TODO: зробить парсер, бо в ячеці не тільки клас, а і предмет
+            value = parsed_data.get(return_type)
+            if value and value.strip():
+                results.add(value.strip())
 
-                # наприклад повернення масиву з класами, бо там можливо їх декілька
+        return list(results)
 
-                # це може бути, тоді коли є розділювач |
-
-                if class_name:
-                    results.add(class_name)
-
-        return sorted(results)
-
-    async def get_new_lessons(self, teacher_name: str, day: Optional[str] = None) -> Optional[List[Tuple]]:
-        pass
-
-    async def get_lessons(self, tn: str, day: Optional[str] = None) -> List[Tuple] | None:
+    async def legacy_get_lessons(self, tn: str, day: Optional[str] = None) -> List[Tuple] | None:
         # OLD SCHEDULE
 
         """
