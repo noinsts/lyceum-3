@@ -5,8 +5,8 @@ import pytz
 
 
 class ScheduleParsers:
-    @staticmethod
-    def _week() -> int:
+    @classmethod
+    def week(cls) -> int:
         """
         Функція повертає номер тижня
 
@@ -44,7 +44,7 @@ class ScheduleParsers:
 
         if '|' in cell_value:
             parts = cell_value.split('|', 1)
-            part = parts[self._week()].strip() if self._week() < len(parts) else ""
+            part = parts[self.week()].strip() if self.week() < len(parts) else ""
         else:
             part = cell_value
 
