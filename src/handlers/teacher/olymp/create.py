@@ -2,6 +2,7 @@ import re
 from typing import List, Optional
 from enum import Enum
 from dataclasses import dataclass
+from datetime import date
 
 from aiogram import F
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
@@ -11,7 +12,7 @@ from aiogram.fsm.context import FSMContext
 from ...base import BaseHandler
 from src.utils import parse_hub_keyboard
 from src.states import CreateOlympStates
-from src.keyboards.reply import SkipButton, OlympStages, GetClass
+from src.keyboards.reply import SkipButton, OlympStages, GetClass, UniversalKeyboard
 from src.keyboards.inline import SubmitKeyboard
 from src.responses import TeacherVerify
 from src.db.connector import DBConnector
@@ -20,6 +21,7 @@ from src.validators import validate_date, validate_form, validate_student_name
 from src.parsers.frontend import parse_date
 from src.decorators import with_validation, next_state
 from src.enums import OlympStage
+from src.exceptions import ValidationError
 
 
 # =====================
@@ -36,7 +38,15 @@ class Triggers(str, Enum):
 @dataclass(frozen=True)
 class Messages:
     SELECT_SUBJECT: str = (
-        "Оберіть предмет зі списку нижче, <b>поки це не працює, тож просто введіть його</b>"
+        "Оберіть потрібний предмет зі списку нижче"
+    )
+
+    INPUT_SUBJECT: str = (
+        "Введіть предмет, з якого буде проводитись олімпіада"
+    )
+
+    SUBJECT_ERROR: str = (
+        "❌ Такого предмету не існує, спробуйте знову"
     )
 
     SELECT_FORM: str = (
@@ -45,6 +55,10 @@ class Messages:
 
     INPUT_FORM: str = (
         "Введіть клас в форматі \"8-А\""
+    )
+
+    FORM_ERROR: str = (
+        "❌ Такого класу не існує, спробуйте знову"
     )
 
     INPUT_STUDENT_NAMES: str = (
@@ -157,36 +171,66 @@ class CreateHandler(BaseHandler):
 
         if not is_verified:
             await TeacherVerify.send_msg(callback)
-            return
+            raise ValidationError
 
         await state.update_data(teacher_name=teacher_name)
-        await callback.message.answer(Messages.SELECT_SUBJECT, parse_mode=ParseMode.HTML)
+
+        sheet = await self.get_sheet()
+        subject_list = await sheet.teacher.my_forms_or_subjects(teacher_name, "subject")
+
+        if subject_list:
+            await callback.message.answer(
+                Messages.SELECT_SUBJECT,
+                reply_markup=UniversalKeyboard().get_keyboard(subject_list)
+            )
+            await state.update_data(subject_list=subject_list)
+        else:
+            await callback.message.answer(Messages.INPUT_SUBJECT, reply_markup=ReplyKeyboardRemove())
+
 
     @next_state(CreateOlympStates.waiting_for_form)
     async def subject(self, message: Message, state: FSMContext) -> None:
         """Оброблює введення предмета"""
-        await state.update_data(subject=message.text.strip())
-        # TODO: в майбутньому додати валідатор по sheet
+        subject = message.text.strip()
 
-        teacher_name = (await state.get_data()).get("teacher_name")
-        forms = self.sheet.teacher.my_classes(teacher_name)
+        data = await state.get_data()
+        subject_list = data.get("subject_list")
 
-        if forms:
+        if subject_list and subject not in subject_list:
+            await message.answer(Messages.SUBJECT_ERROR)
+            raise ValidationError
+
+        await state.update_data(subject=subject)
+
+        teacher_name = data.get("teacher_name")
+
+        sheet = await self.get_sheet()
+        forms_list = await sheet.teacher.my_forms_or_subjects(teacher_name, "form")
+
+        if forms_list:
             await message.answer(
                 Messages.SELECT_FORM,
-                reply_markup=GetClass().get_keyboard(forms),
+                reply_markup=GetClass().get_keyboard(forms_list),
                 parse_mode=ParseMode.HTML
             )
+            await state.update_data(forms_list=forms_list)
         else:
-            await message.answer(Messages.INPUT_FORM, parse_mode=ParseMode.HTML)
+            await message.answer(Messages.INPUT_FORM, reply_markup=ReplyKeyboardRemove())
 
     @classmethod
     @next_state(CreateOlympStates.waiting_for_student_name)
     @with_validation(validate_form)
     async def form(cls, message: Message, state: FSMContext) -> None:
         """Оброблює введення класу"""
-        await state.update_data(form=message.text.strip())
-        await message.answer(Messages.INPUT_STUDENT_NAMES)
+        form = message.text.strip()
+        forms_list = (await state.get_data()).get("forms_list")
+
+        if forms_list and form not in forms_list:
+            await message.answer(Messages.FORM_ERROR)
+            raise ValidationError
+
+        await state.update_data(form=form)
+        await message.answer(Messages.INPUT_STUDENT_NAMES, reply_markup=ReplyKeyboardRemove())
 
     @next_state(CreateOlympStates.waiting_for_olymp_stage)
     async def student_name(self, message: Message, state: FSMContext) -> None:
@@ -195,7 +239,7 @@ class CreateHandler(BaseHandler):
 
         if not students:
             await message.answer(Messages.STUDENT_NAME_VALIDATION_ERROR)
-            return
+            raise ValidationError
 
         await state.update_data(student_names=message.text.strip())
 
@@ -219,8 +263,7 @@ class CreateHandler(BaseHandler):
     @with_validation(validate_date)
     async def date(cls, message: Message, state: FSMContext) -> None:
         """Оброблює введення дати"""
-        date = parse_date(message.text)
-        await state.update_data(date=date)
+        await state.update_data(date=parse_date(message.text).isoformat())
         await message.answer(Messages.INPUT_NOTE, reply_markup=SkipButton().get_keyboard())
 
     @next_state(CreateOlympStates.confirm_creating)
@@ -283,7 +326,7 @@ class CreateHandler(BaseHandler):
         return Messages.CONFIRMATION_TEXT.format(
             subject=data.get("subject"),
             form=data.get("form"),
-            student_name=data.get("student_names"),
+            student_names=data.get("student_names"),
             olymp_stage=data.get("olymp_stage"),
             date=data.get("date"),
             note=data.get("note") or "—"
@@ -292,14 +335,15 @@ class CreateHandler(BaseHandler):
     @classmethod
     async def _create_olympiad(cls, data: dict, db: DBConnector) -> None:
         """Створення олімпіади в базі даних"""
-        student_names = re.split(r'\s*, \s*', data.get("student_names").strip())
+        students_str = data.get("student_names", "")
+        student_names = re.split(r'\s*,\s*', students_str.strip()) if students_str else []
 
         olymp_data = {
             'form': data.get("form"),
             'teacher_name': data.get("teacher_name"),
             'subject': data.get("subject"),
             'stage_olymp': data.get("olymp_stage"),
-            'date': data.get("date"),
+            'date': date.fromisoformat(data.get("date")),
             'note': data.get("note")
         }
 
