@@ -1,75 +1,76 @@
+from enum import Enum
+from dataclasses import dataclass
+
 from aiogram import F
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
-from src.utils import JSONLoader
-from src.sheets.connector import Sheet
 from src.db.connector import DBConnector
+from src.parsers.frontend import parse_day_name
 
 
-class GenerateMessage:
-    @staticmethod
-    async def send(message: Message, tn: str, offset: int = 0, tz = None) -> None:
+class Triggers(str, Enum):
+    TODAY = "📅 Класи на сьогодні"
+    TOMORROW = "🌅 Розклад на завтра"
 
-        if not tn:
-            # оброблюємо ситуацію, коли вчитель не зареєстрований
-            await message.answer(
-                "⚠️ <b>Вибачте, вашого імені не ініціалізовано, будь-ласка, "
-                "спробуйте повторно перереєструватись за допомогою команди /register</b>",
-                parse_mode=ParseMode.HTML
-            )
+
+@dataclass(frozen=True)
+class Messages:
+    NO_TEACHER_NAME = (
+        "⚠️ <b>Вибачте, вашого імені не ініціалізовано, будь-ласка, "
+        "спробуйте повторно перереєструватись за допомогою команди /register</b>"
+    )
+
+    WEEKEND = "Вихідний! Чому ви думаєте про роботу?"
+
+    NO_RESULTS = (
+        "Схоже, у вас цього дня немає жодного уроку. "
+        "Вітаю, ви або в відпустці, або дуже щасливий викладач 😎"
+    )
+
+    STICKER = "CAACAgIAAxkBAAEOZ1doFUn9Y0TR-qURiQeEb7HZdGC2qQACOjMAAlG5gEjH0Q7wxWFwrDYE"
+
+    DEV_BADGE = "\n<i>Знайшли неточність? Будь-ласка повідомте @noinsts</i>"
+
+
+class LessonsByDaysHandler(BaseHandler):
+    def register_handler(self) -> None:
+        self.router.message.register(
+            self.handler,
+            F.text.in_({Triggers.TODAY.value, Triggers.TOMORROW.value})
+        )
+
+    async def handler(self, message: Message, db: DBConnector) -> None:
+        is_tomorrow = message.text == Triggers.TOMORROW.value
+        offset = 1 if is_tomorrow else 0
+
+        teacher_name = await db.register.get_teacher_name(message.from_user.id)
+
+        if not teacher_name:
+            await message.answer(Messages.NO_TEACHER_NAME, parse_mode=ParseMode.HTML)
             return
 
-        day_num: int = (message.date.astimezone(tz).weekday() + offset) % 7
+        day_name = parse_day_name(offset)
 
-        if day_num > 4:
-            # оброблюємо ситуацію, якщо вихідний
-            await message.answer("Вихідний! Чому ви думаєте про роботу?")
-            await message.answer_sticker("CAACAgIAAxkBAAEOZ1doFUn9Y0TR-qURiQeEb7HZdGC2qQACOjMAAlG5gEjH0Q7wxWFwrDYE")
+        if not day_name:
+            await message.answer(Messages.WEEKEND)
+            await message.answer_sticker(Messages.STICKER)
             return
-        
-        day_name: str = JSONLoader("settings/ukranian_weekname.json").get(str(day_num))
 
-        results = Sheet().teacher.get_lessons(tn, day_name)
+        sheet = await self.get_sheet()
+        results = await sheet.teacher.get_lessons(teacher_name, day_name)
 
         if not results:
-            # оброблюємо ситуацію, коли у вчителя вихідний
-            await message.answer("Вам пощастило! Уроків немає")
-            await message.answer_sticker("CAACAgIAAxkBAAEOZ1loFUxiV3fJxTbJ0Q6iD6LDAkhsxwACBTgAAp17sEknYmmEwwt6pTYE")
+            await message.answer(Messages.NO_RESULTS)
+            await message.answer_sticker(Messages.STICKER)
             return
-        
-        prompt = f'<b>Список класів на {"завтра" if offset > 0 else "сьогодні"}</b>\n\n'
 
-        # TODO: зробить інформацію про ще одного вчителя з яким проходить урок (друга підгрупа)
-        # TODO: робимо перевірку чи є два split(',')
-        # TODO: якщо є, то знаходимо де вчитель != імені вчителя клієнта
-        # TODO: виводимо цю частину teacher в schedule
+        day_word = "завтра" if is_tomorrow else "сьогодні"
+        lessons_list = [f"<b>{lesson_id}</b>: {subject} з {form}" for lesson_id, subject, form in results]
+        prompt = f'<b>Список класів на {day_word}</b>\n\n' + "\n".join(lessons_list) + Messages.DEV_BADGE
 
-        for lesson_id, subject, form in results:
-            prompt += f"<b>{lesson_id}</b>: {subject} з {form}\n"
+        # TODO: dev badge
+        prompt += Messages.DEV_BADGE
 
-        prompt += "\n<i>Знайшли неточність? Будь-ласка повідомте @noinsts</i>"
-
-        await message.answer(
-            prompt,
-            parse_mode=ParseMode.HTML
-        )
-            
-
-class LessonsTodayHandler(BaseHandler):
-    def register_handler(self) -> None:
-        self.router.message.register(self.today, F.text == '📅 Класи на сьогодні')
-
-    async def today(self, message: Message, db: DBConnector) -> None:
-        tn = await db.register.get_teacher_name(message.from_user.id)
-        await GenerateMessage().send(message, tn, 0, self.kyiv_tz)
-
-
-class LessonsTomorrowHandler(BaseHandler):
-    def register_handler(self) -> None:
-        self.router.message.register(self.tomorrow, F.text == '🌅 Розклад на завтра')
-
-    async def tomorrow(self, message: Message, db: DBConnector) -> None:
-        tn = await db.register.get_teacher_name(message.from_user.id)
-        await GenerateMessage().send(message, tn, 1, self.kyiv_tz)
+        await message.answer(prompt, parse_mode=ParseMode.HTML)

@@ -2,8 +2,8 @@ from aiogram import Router
 
 from .all_week import AllWeekHandler
 from .my_post import MyPostHandler
-from .lessons_by_day import LessonsTodayHandler, LessonsTomorrowHandler
-from .academy_time import AcademyTime
+from .lessons_by_day import LessonsByDaysHandler
+from .academy_time import AcademyTimeHandler
 from .olymp import get_olymp_router
 from src.middlewares import RoleAccessMiddleware
 
@@ -15,9 +15,8 @@ def get_teacher_router() -> Router:
     routers = [
         AllWeekHandler().get_router(),
         MyPostHandler().get_router(),
-        LessonsTodayHandler().get_router(),
-        LessonsTomorrowHandler().get_router(),
-        AcademyTime().get_router(),
+        LessonsByDaysHandler().get_router(),
+        AcademyTimeHandler().get_router(),
         *get_olymp_router()
     ]
 
