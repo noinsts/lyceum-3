@@ -56,7 +56,8 @@ class RedisControlPanel(BaseKeyboard):
 class AdminAnnouncementHub(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='🫱🏻‍🫲🏻 Запланувати нараду', callback_data='meeting')]
+            [InlineKeyboardButton(text='🫱🏻‍🫲🏻 Запланувати нараду', callback_data='meeting')],
+            [InlineKeyboardButton(text='⬅️ Назад', callback_data='back_to_admin_hub')]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
