@@ -33,6 +33,17 @@ class HubAdminSchedule(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
+class FormControllerAdmin(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='Встановить Depth S.', callback_data='set_depth_subject')],
+            [InlineKeyboardButton(text='Встановить класного керівника', callback_data='set_form_teacher')],
+            [InlineKeyboardButton(text='Інформація про клас', callback_data='get_form_info')],
+            [InlineKeyboardButton(text='⬅️ Назад', callback_data='back_to_admin_hub')]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
 class RedisControlPanel(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
