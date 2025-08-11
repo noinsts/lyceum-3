@@ -15,7 +15,8 @@ class HubAdmin(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
             [InlineKeyboardButton(text='📢 Створити оголошення', callback_data="announcement_hub")],
-            [InlineKeyboardButton(text='📅 Змінити розклад', callback_data='admin_schedule_hub')]
+            [InlineKeyboardButton(text='📅 Змінити розклад', callback_data='admin_schedule_hub')],
+            [InlineKeyboardButton(text='🫐 Керування класами', callback_data='admin_form_controller_hub')],
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
