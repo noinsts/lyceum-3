@@ -64,7 +64,11 @@ class AdminAnnouncementHub(BaseKeyboard):
 
 
 class TeacherTypes(BaseKeyboard):
-    def get_keyboard(self) -> InlineKeyboardMarkup:
+    def get_keyboard(
+            self,
+            is_multiply: Optional[bool] = True,
+            back_callback: Optional[str] = "to_admin_schedule_hub"
+    ) -> InlineKeyboardMarkup:
         kb = InlineKeyboardBuilder()
 
         for category in TeacherTypeEnum:
@@ -73,16 +77,22 @@ class TeacherTypes(BaseKeyboard):
                 callback_data=TeacherCategoryCallback(name=category.name.lower()).pack()
             )
 
-        kb.button(text='✅ Готово', callback_data="admin_teacher_schedule_done")
-        kb.button(text='ℹ️ Список доданих', callback_data="admin_teacher_schedule_list")
+        if is_multiply:
+            kb.button(text='✅ Готово', callback_data="admin_teacher_schedule_done")
+            kb.button(text='ℹ️ Список доданих', callback_data="admin_teacher_schedule_list")
+
+        kb.button(text='⬅️ Назад', callback_data=back_callback)
 
         kb.adjust(1)
-
         return kb.as_markup()
 
 
 class TeacherList(BaseKeyboard):
-    def get_keyboard(self, teacher_list: Optional[List[Tuple[int, str]]] = None) -> InlineKeyboardMarkup:
+    def get_keyboard(
+            self,
+            teacher_list: Optional[List[Tuple[int, str]]] = None,
+            back_callback: Optional[str] = "admin_back_to_select_category"
+    ) -> InlineKeyboardMarkup:
         kb = InlineKeyboardBuilder()
 
         if not teacher_list:
@@ -94,10 +104,9 @@ class TeacherList(BaseKeyboard):
                 callback_data=TeacherListCallback(teacher_id=teacher_id).pack()
             )
 
-        kb.button(text="🔙 Назад", callback_data="admin_back_to_select_category")
+        kb.button(text="🔙 Назад", callback_data=back_callback)
 
         kb.adjust(1)
-
         return kb.as_markup()
 
 
@@ -110,8 +119,13 @@ class AdminTeacherBackToCategory(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
-class SelectFormMultiply(BaseKeyboard):
-    def get_keyboard(self, classes: Optional[List[str]] = None) -> InlineKeyboardMarkup:
+class SelectForm(BaseKeyboard):
+    def get_keyboard(
+            self,
+            classes: Optional[List[str]] = None,
+            is_multiply: Optional[bool] = True,
+            back_callback: Optional[str] = "non"
+    ) -> InlineKeyboardMarkup:
         main_kb = InlineKeyboardBuilder()
         control_kb = InlineKeyboardBuilder()
 
@@ -120,14 +134,17 @@ class SelectFormMultiply(BaseKeyboard):
                 text=form,
                 callback_data=FormsListCallback(form=form).pack()
             )
+
         main_kb.adjust(3)
 
-        control_kb.button(text='✅ Готово', callback_data="admin_student_schedule_done")
-        control_kb.button(text='ℹ️ Список доданих', callback_data="admin_student_schedule_list")
+        if is_multiply:
+            control_kb.button(text='✅ Готово', callback_data="admin_student_schedule_done")
+            control_kb.button(text='ℹ️ Список доданих', callback_data="admin_student_schedule_list")
+
+        control_kb.button(text="🔙 Назад", callback_data=back_callback)
+
         control_kb.adjust(1)
-
         main_kb.attach(control_kb)
-
         return main_kb.as_markup()
 
 
