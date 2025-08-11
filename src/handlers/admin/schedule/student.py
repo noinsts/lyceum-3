@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
 from ...base import BaseHandler
-from src.keyboards.inline import SubmitKeyboard, SelectFormMultiply
+from src.keyboards.inline import SubmitKeyboard, SelectForm
 from src.utils import classes
 from src.states.admin import StudentSchedule
 from src.db.connector import DBConnector
@@ -65,7 +65,7 @@ class StudentsChangeSchedule(BaseHandler):
 
         await callback.message.answer(
             "Оберіть класи зі списку",
-            reply_markup=SelectFormMultiply().get_keyboard(forms)
+            reply_markup=SelectForm().get_keyboard(forms)
         )
 
         await state.set_state(StudentSchedule.waiting_for_forms)
@@ -193,7 +193,7 @@ class StudentsChangeSchedule(BaseHandler):
 
         await callback.message.edit_text(
             "Ну і ладно, введіть класи, які хочете сповістити",
-            reply_markup=SelectFormMultiply().get_keyboard(classes.CLASSES)
+            reply_markup=SelectForm().get_keyboard(classes.CLASSES)
         )
 
     @staticmethod
