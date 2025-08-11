@@ -38,7 +38,7 @@ class AllWeekHandler(BaseHandler):
         results = await sheet.teacher.get_lessons(teacher_name)
 
         if not results:
-            await message.answer(Message.NO_RESULTS)
+            await message.answer(Messages.NO_RESULTS)
             return
 
         by_day = defaultdict(list)
