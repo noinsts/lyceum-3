@@ -1,6 +1,7 @@
 from aiogram import Router
 
 from .hub import AdminHubHandler
+from .forms import get_form_admin_routers
 from .schedule import get_admin_schedule_routers
 from .announcement import get_announcement_router
 
@@ -13,6 +14,7 @@ def get_admin_router() -> Router:
 
     routers = [
         AdminHubHandler().get_router(),
+        *get_form_admin_routers(),
         *get_announcement_router(),
         *get_admin_schedule_routers()
     ]
