@@ -14,7 +14,7 @@ class AnnouncementHub(BaseHandler):
 
     @staticmethod
     async def announcement_hub(callback: CallbackQuery):
-        await callback.message.answer(
+        await callback.message.edit_text(
             "Оберіть зі списку нижче тип оголошення",
             reply_markup=AdminAnnouncementHub().get_keyboard()
         )
