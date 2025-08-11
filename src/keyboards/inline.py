@@ -27,7 +27,8 @@ class HubAdminSchedule(BaseKeyboard):
         kb = [
             [InlineKeyboardButton(text='🧑🏻‍🎓', callback_data='change_schedule_student'),
              InlineKeyboardButton(text='🧑🏻‍🏫', callback_data='change_schedule_teacher')],
-            [InlineKeyboardButton(text='🔃 Refresh', callback_data='refresh_cache_schedule')]
+            [InlineKeyboardButton(text='🔃 Refresh', callback_data='refresh_cache_schedule')],
+            [InlineKeyboardButton(text='⬅️ Назад', callback_data='back_to_admin_hub')]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
