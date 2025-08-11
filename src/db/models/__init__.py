@@ -3,11 +3,13 @@ from .users import UserModel
 from .teacher import TeacherModel
 from .verification import TeacherVerificationModel
 from .qualification import TeacherQualificationModel
+from .form import FormModel
 
 __all__ = [
     "OlympModel",
     "UserModel",
     "TeacherModel",
     "TeacherVerificationModel",
-    "TeacherQualificationModel"
+    "TeacherQualificationModel",
+    "FormModel"
 ]

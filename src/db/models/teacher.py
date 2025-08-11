@@ -12,3 +12,4 @@ class TeacherModel(BaseModel):
 
     qualifications = relationship('TeacherQualificationModel', back_populates='teacher')
     verification = relationship("TeacherVerificationModel", uselist=False, back_populates="teacher")
+    form = relationship('FormModel', back_populates='teacher', uselist=False)
