@@ -52,6 +52,22 @@ class FormControllerAdmin(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
+class DepthSubjectKeyboard(BaseKeyboard):
+    def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+
+        for subject in DepthSubjectEnum:
+            kb.button(
+                text=subject.value,
+                callback_data=DepthSubjectCallback(subject=subject.name).pack()
+            )
+
+        kb.button(text="⬅️ Назад", callback_data=back_callback)
+
+        kb.adjust(1)
+        return kb.as_markup()
+
+
 class RedisControlPanel(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
