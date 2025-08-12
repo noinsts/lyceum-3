@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 
 from .base import BaseModel
-from src.enums import DepthStudy
+from src.enums import DepthSubjectEnum
 
 
 class FormModel(BaseModel):
@@ -12,8 +12,8 @@ class FormModel(BaseModel):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     teacher_id: Mapped[int] = mapped_column(Integer, ForeignKey('teachers.id'), unique=True, nullable=True)
-    depth_subject: Mapped[DepthStudy] = mapped_column(
-        PgEnum(DepthStudy, name='depth_subject_enum'),
+    depth_subject: Mapped[DepthSubjectEnum] = mapped_column(
+        PgEnum(DepthSubjectEnum, name='depth_subject_enum'),
         nullable=True
     )
 
