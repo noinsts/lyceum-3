@@ -4,10 +4,11 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .base import BaseKeyboard
-from src.enums import TeacherTypeEnum
+from src.enums import TeacherTypeEnum, DepthSubjectEnum
 from src.filters.callbacks import (
     TeacherCategoryCallback, TeacherListCallback,
-    FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback
+    FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback,
+    DepthSubjectCallback
 )
 
 
