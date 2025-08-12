@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from ..models import FormModel
+from src.enums import DepthSubjectEnum
 
 
 class FormQueries:
@@ -33,8 +34,23 @@ class FormQueries:
         result = await self.session.execute(query)
         return result.scalar()
 
-    async def set_depth_subject(self, form: str, depth_subject: str) -> None:
-        pass
+    async def get_depth_subject(self, form: str) -> Optional[DepthSubjectEnum]:
+        query = select(FormModel.depth_subject).where(FormModel.name == form)
+        result = await self.session.execute(query)
+        return result.scalar()
+
+    async def set_depth_subject(self, form: str, depth_subject: DepthSubjectEnum) -> None:
+        try:
+            query = (
+                update(FormModel)
+                .where(FormModel.name == form)
+                .values(depth_subject=depth_subject)
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise e
 
     async def set_teacher_form(self, form: str, teacher_id: int) -> None:
         try:
