@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .queries import *
+from .queries.form import FormQueries
 
 
 class DBConnector:
@@ -11,3 +12,4 @@ class DBConnector:
         self.olymp = OlympQueries(session)
         self.verification = TeacherVerificationQueries(session)
         self.qualification = QualificationQueries(session)
+        self.form = FormQueries(session)
