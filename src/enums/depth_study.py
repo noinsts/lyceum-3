@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class DepthStudy(str, Enum):
+class DepthSubjectEnum(str, Enum):
     MATH = "Математичний"
     BIOLOGY = "Біологічний"
     GEOGRAPHY = "Географічний"
