@@ -17,7 +17,7 @@ class TeacherVerificationQueries:
         result = await self.session.execute(query)
         return result.scalar()
 
-    async def _get_teacher_name(self, teacher_id: int) -> str:
+    async def get_teacher_name_by_id(self, teacher_id: int) -> str:
         """Метод повертає ім'я вчителя за його ID"""
         query = select(TeacherModel.name).where(TeacherModel.id == teacher_id)
         result = await self.session.execute(query)
@@ -72,7 +72,7 @@ class TeacherVerificationQueries:
         if teacher_id is None:
             return None
 
-        teacher_name = await self._get_teacher_name(teacher_id)
+        teacher_name = await self.get_teacher_name_by_id(teacher_id)
         return teacher_name
 
     async def add_verif_teacher(self, user_id: int, teacher_name: str) -> None:
