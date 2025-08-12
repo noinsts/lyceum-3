@@ -11,6 +11,14 @@ from src.filters.callbacks import (
 )
 
 
+class BackToAdminHub(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text='🔙 Повернутись в хаб', callback_data='back_to_admin_hub')]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
 class HubAdmin(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
