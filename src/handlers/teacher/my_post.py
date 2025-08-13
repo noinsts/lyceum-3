@@ -21,7 +21,10 @@ class MyPostHandler(BaseHandler):
 
     @staticmethod
     async def handler(message: Message) -> None:
-        await message.answer("Функція стане доступною після отримання графіку чергування 2025-2026 н. р.")
+        await message.answer(
+            "Мій пост тимчасово недоступний, бо графік чергування відсутній. "
+            "Щойно він з'явиться, ця кнопка одразу ж запрацює! Дякую за розуміння! ✨"
+        )
 
     async def my_post(self, message: Message, db: DBConnector) -> None:
         """Обробник кнопки 🚦 Мій пост"""

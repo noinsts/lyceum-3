@@ -22,11 +22,13 @@ class Messages:
         "спробуйте повторно перереєструватись за допомогою команди /register</b>"
     )
 
-    WEEKEND = "Вихідний! Чому ви думаєте про роботу?"
+    WEEKEND = (
+        "🎉 Сьогодні — вихідний! Це ідеальний час, щоб відпочити та набратися сил. "
+        "Насолоджуйтеся моментом! 😊"
+    )
 
     NO_RESULTS = (
-        "Схоже, у вас цього дня немає жодного уроку. "
-        "Вітаю, ви або в відпустці, або дуже щасливий викладач 😎"
+        "Ура! 🎉 На {day} у вас немає уроків. Можна видихнути й трохи відпочити!"
     )
 
     STICKER = "CAACAgIAAxkBAAEOZ1doFUn9Y0TR-qURiQeEb7HZdGC2qQACOjMAAlG5gEjH0Q7wxWFwrDYE"
@@ -53,6 +55,8 @@ class LessonsByDaysHandler(BaseHandler):
 
         day_name = parse_day_name(offset)
 
+        day_word = "завтра" if is_tomorrow else "сьогодні"
+
         if not day_name:
             await message.answer(Messages.WEEKEND)
             await message.answer_sticker(Messages.STICKER)
@@ -62,11 +66,10 @@ class LessonsByDaysHandler(BaseHandler):
         results = await sheet.teacher.get_lessons(teacher_name, day_name)
 
         if not results:
-            await message.answer(Messages.NO_RESULTS)
+            await message.answer(Messages.NO_RESULTS.format(day=day_word))
             await message.answer_sticker(Messages.STICKER)
             return
 
-        day_word = "завтра" if is_tomorrow else "сьогодні"
         lessons_list = [f"<b>{lesson_id}</b>: {subject} з {form}" for lesson_id, subject, form in results]
         prompt = f'<b>Список класів на {day_word}</b>\n\n' + "\n".join(lessons_list) + Messages.DEV_BADGE
 
