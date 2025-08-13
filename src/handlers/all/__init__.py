@@ -2,6 +2,7 @@ from aiogram import Router
 
 from .calls import CallsHandler
 from .today_shorted import TodayShortedHandler
+from .resources import ResourcesHandler
 
 
 def get_a_router() -> Router:
@@ -10,7 +11,8 @@ def get_a_router() -> Router:
 
     routers = [
         CallsHandler().get_router(),
-        TodayShortedHandler().get_router()
+        TodayShortedHandler().get_router(),
+        ResourcesHandler().get_router()
     ]
 
     for r in routers:
