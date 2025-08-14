@@ -27,7 +27,7 @@ class StartHandler(BaseHandler):
         developers = Developers().DEVELOPERS
 
         if user_id in developers:
-            await DevHubHandler().show_hub(message)
+            await DevHubHandler().show_hub(message, state)
 
         if user_id in admins:
             await AdminHubHandler().show_hub(message)
