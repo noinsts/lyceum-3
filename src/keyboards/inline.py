@@ -12,6 +12,14 @@ from src.filters.callbacks import (
 )
 
 
+class BackButton(BaseKeyboard):
+    def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="🔙 Назад", callback_data=back_callback)]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
 class BackToAdminHub(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
