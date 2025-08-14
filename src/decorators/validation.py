@@ -1,4 +1,5 @@
 from functools import wraps
+from typing import Callable
 
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -6,11 +7,11 @@ from aiogram.fsm.context import FSMContext
 from src.exceptions import ValidationError
 
 
-def with_validation(validate):
+def with_validation(validate: Callable[[str], None]):
     """
     Декоратор, що валідує message.text за вказаним валідатором
     """
-    def decorator(handler_func):
+    def decorator(handler_func: Callable):
         @wraps(handler_func)
         async def wrapper(self, message: Message, state: FSMContext, *args, **kwargs):
             try:
