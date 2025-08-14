@@ -16,6 +16,11 @@ class RegisterQueries:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def get_all_ids(self) -> List[int]:
+        query = select(UserModel.user_id)
+        result = await self.session.execute(query)
+        return list(result.scalars())
+
     async def is_exists(self, user_id: int) -> bool:
         query = select(exists().where(UserModel.user_id == user_id))
         result = await self.session.execute(query)
