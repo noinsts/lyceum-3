@@ -8,7 +8,7 @@ from src.enums import TeacherTypeEnum, DepthSubjectEnum
 from src.filters.callbacks import (
     TeacherCategoryCallback, TeacherListCallback,
     FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback,
-    DepthSubjectCallback
+    DepthSubjectCallback, BroadcastTypeCallback, BroadcastTypeEnum
 )
 
 
@@ -256,3 +256,18 @@ class TeacherVerifyFAQ(BaseKeyboard):
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+class BroadcastType(BaseKeyboard):
+    def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+
+        for method in BroadcastTypeEnum:
+            kb.button(
+                text=method.value,
+                callback_data=BroadcastTypeCallback(method=method.name).pack()
+            )
+
+        kb.button(text="⬅️ Назад", callback_data=back_callback)
+
+        kb.adjust(1)
+        return kb.as_markup()
