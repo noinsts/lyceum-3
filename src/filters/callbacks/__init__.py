@@ -3,6 +3,7 @@ from .teachers_list import TeacherListCallback
 from .forms_list import FormsListCallback
 from .developer_block import DeveloperSearchEnum, DeveloperSearchCallback
 from .depth_subject import DepthSubjectCallback
+from .broadcast_type import BroadcastTypeCallback, BroadcastTypeEnum
 
 __all__ = [
     "TeacherCategoryCallback",
@@ -10,5 +11,7 @@ __all__ = [
     "FormsListCallback",
     "DeveloperSearchEnum",
     "DeveloperSearchCallback",
-    "DepthSubjectCallback"
+    "DepthSubjectCallback",
+    "BroadcastTypeCallback",
+    "BroadcastTypeEnum"
 ]
