@@ -111,8 +111,8 @@ class TeacherTypes(BaseKeyboard):
             )
 
         if is_multiply:
-            kb.button(text='✅ Готово', callback_data="admin_teacher_schedule_done")
-            kb.button(text='ℹ️ Список доданих', callback_data="admin_teacher_schedule_list")
+            kb.button(text='✅ Готово', callback_data="selected_teacher_done")
+            kb.button(text='ℹ️ Список доданих', callback_data="selected_teacher_list")
 
         kb.button(text='⬅️ Назад', callback_data=back_callback)
 
