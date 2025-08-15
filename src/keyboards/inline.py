@@ -175,8 +175,8 @@ class SelectForm(BaseKeyboard):
         main_kb.adjust(3)
 
         if is_multiply:
-            control_kb.button(text='✅ Готово', callback_data="admin_student_schedule_done")
-            control_kb.button(text='ℹ️ Список доданих', callback_data="admin_student_schedule_list")
+            control_kb.button(text='✅ Готово', callback_data="selected_forms_done")
+            control_kb.button(text='ℹ️ Список доданих', callback_data="selected_forms_list")
 
         control_kb.button(text="🔙 Назад", callback_data=back_callback)
 
