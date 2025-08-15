@@ -144,10 +144,14 @@ class TeacherList(BaseKeyboard):
 
 
 class AdminTeacherBackToCategory(BaseKeyboard):
-    def get_keyboard(self) -> InlineKeyboardMarkup:
+    def get_keyboard(
+            self,
+            continue_adding: Optional[str] = "admin_back_to_select_category",
+            message_callback: Optional[str] = "admin_teacher_schedule_done"
+    ) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text="🔙 Продовжити додавання", callback_data="admin_back_to_select_category")],
-            [InlineKeyboardButton(text="✅ Відправити сповіщення", callback_data="admin_teacher_schedule_done")]
+            [InlineKeyboardButton(text="🔙 Продовжити додавання", callback_data=continue_adding)],
+            [InlineKeyboardButton(text="✅ Відправити сповіщення", callback_data=message_callback)]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
