@@ -21,9 +21,9 @@ class BackButton(BaseKeyboard):
 
 
 class BackToAdminHub(BaseKeyboard):
-    def get_keyboard(self) -> InlineKeyboardMarkup:
+    def get_keyboard(self, back_callback: Optional[str] = "back_to_admin_hub") -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='🔙 Повернутись в хаб', callback_data='back_to_admin_hub')]
+            [InlineKeyboardButton(text='🔙 Повернутись в хаб', callback_data=back_callback)]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
