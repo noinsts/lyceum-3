@@ -16,8 +16,8 @@ from src.service import broadcast
 from src.filters.callbacks import FormsListCallback
 
 HANDLER_TRIGGER = "change_schedule_student"
-FINISH_TRIGGER = "admin_student_schedule_done"
-SELECTED_FORMS_TRIGGER = "admin_student_schedule_list"
+FINISH_TRIGGER = "selected_forms_done"
+SELECTED_FORMS_TRIGGER = "selected_forms_list"
 SUBMIT_TRIGGER = "submit_send_student_schedule_broadcast"
 CANCEL_TRIGGER = "cancel_send_student_schedule_broadcast"
 
@@ -89,6 +89,8 @@ class StudentsChangeSchedule(BaseHandler):
             await state.update_data(dataset=list(updated_dataset))
 
         await callback.answer(response)
+
+    # TODO: винести в validators
 
     @staticmethod
     def _validate_forms(raw: str, dataset: Set[str], forms: List[str]) -> Tuple[bool, str, Set[str]]:

@@ -17,8 +17,8 @@ from src.utils import JSONLoader
 
 HANDLER_TRIGGER = "change_schedule_teacher"
 BACK_TRIGGGER = "admin_back_to_select_category"
-DONE_TRIGGER = "admin_teacher_schedule_done"
-LIST_TRIGGER = "admin_teacher_schedule_list"
+DONE_TRIGGER = "selected_teacher_done"
+LIST_TRIGGER = "selected_teacher_list"
 SUBMIT_TRIGGER = "submit_admin_schedule_teacher"
 CANCEL_TRIGGER = "cancel_admin_schedule_teacher"
 
