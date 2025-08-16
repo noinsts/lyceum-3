@@ -11,7 +11,7 @@ class TeacherVerificationQueries:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def _get_teacher_id(self, teacher_name: str) -> Optional[int]:
+    async def get_teacher_id(self, teacher_name: str) -> Optional[int]:
         """Внутрішній метод: отримує teacher_id за іменем"""
         query = select(TeacherModel.id).where(TeacherModel.name == teacher_name)
         result = await self.session.execute(query)
@@ -25,7 +25,7 @@ class TeacherVerificationQueries:
 
     async def is_verif(self, user_id: int, teacher_name: str) -> bool:
         """Повертає булеве значення верифікації вчителя"""
-        teacher_id = await self._get_teacher_id(teacher_name)
+        teacher_id = await self.get_teacher_id(teacher_name)
 
         if teacher_id is None:
             return False
@@ -50,7 +50,7 @@ class TeacherVerificationQueries:
 
     async def get_user_id(self, teacher_name: str) -> Optional[int]:
         """Отримує user_id за іменем вчителя"""
-        teacher_id = await self._get_teacher_id(teacher_name)
+        teacher_id = await self.get_teacher_id(teacher_name)
 
         if teacher_id is None:
             return None
@@ -78,7 +78,7 @@ class TeacherVerificationQueries:
     async def add_verif_teacher(self, user_id: int, teacher_name: str) -> None:
         """Додає або оновлює верифікацію вчителя"""
         try:
-            teacher_id = await self._get_teacher_id(teacher_name)
+            teacher_id = await self.get_teacher_id(teacher_name)
 
             if teacher_id is None:
                 raise ValueError(f"Teacher '{teacher_name}' не знайдено в базі.")
