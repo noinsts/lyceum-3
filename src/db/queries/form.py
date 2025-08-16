@@ -64,8 +64,3 @@ class FormQueries:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
-
-    async def get_info(self, form: str) -> Optional[FormModel]:
-        query = select(FormModel).where(FormModel.name == form)
-        result = await self.session.execute(query)
-        return result.scalar()
