@@ -8,7 +8,8 @@ from src.enums import TeacherTypeEnum, DepthSubjectEnum
 from src.filters.callbacks import (
     TeacherCategoryCallback, TeacherListCallback,
     FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback,
-    DepthSubjectCallback, BroadcastTypeCallback, BroadcastTypeEnum
+    DepthSubjectCallback, BroadcastTypeCallback, BroadcastTypeEnum,
+    TeacherVerifyCallback, TeacherVerifyEnum
 )
 
 
@@ -248,14 +249,19 @@ class DeveloperSearchType(BaseKeyboard):
 
 
 class TeacherVerifyFAQ(BaseKeyboard):
-    def get_keyboard(self) -> InlineKeyboardMarkup:
-        kb = [
-            [InlineKeyboardButton(text='Як отримати верифікацію', callback_data='how_get_verify')],
-            [InlineKeyboardButton(text='Нащо це потрібно', callback_data='why_need_verify')],
-            [InlineKeyboardButton(text='Як це працює?', callback_data='how_works_verify')]
-        ]
+    def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
 
-        return InlineKeyboardMarkup(inline_keyboard=kb)
+        for val in TeacherVerifyEnum:
+            kb.button(
+                text=val.value,
+                callback_data=TeacherVerifyCallback(method=val.name).pack()
+            )
+
+        kb.button(text="Назад", callback_data=back_callback)
+
+        kb.adjust(1)
+        return kb.as_markup()
 
 class BroadcastType(BaseKeyboard):
     def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
