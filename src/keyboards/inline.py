@@ -276,7 +276,7 @@ class BroadcastType(BaseKeyboard):
 class TeacherManageForm(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='Інформація про клас', callback_data="my_form_info")],
-            [InlineKeyboardButton(text='Написати оголошення', callback_data="my_form_broadcast")]
+            [InlineKeyboardButton(text='ℹ️ Інформація про клас', callback_data="my_form_info")],
+            [InlineKeyboardButton(text='📢 Написати оголошення', callback_data="my_form_broadcast")]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
