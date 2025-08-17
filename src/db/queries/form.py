@@ -64,3 +64,9 @@ class FormQueries:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
+
+    async def get_form_by_teacher(self, teacher_id: int) -> Optional[str]:
+        """Повертає назву класу за ID класного керівника"""
+        query = select(FormModel.name).where(FormModel.teacher_id == teacher_id)
+        result = await self.session.execute(query)
+        return result.scalar()
