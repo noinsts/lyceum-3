@@ -183,6 +183,11 @@ class RegisterHandler(BaseHandler):
             )
         )
 
+        teacher_id = await db.verification.get_teacher_id(teacher_name)
+        form = await db.form.get_form_by_teacher(teacher_id)
+
+        is_verified = await db.verification.is_verif(message.from_user.id, teacher_name)
+
         # створюємо промпт повідомлення
         msg = (
             f"✅ <b>Успіх! Дані успішно записані!</b>\n\n"
@@ -192,7 +197,9 @@ class RegisterHandler(BaseHandler):
             msg += (f"<b>Клас</b>: {form}\n"
                     f"<b>Ім'я</b>: {student_name}\n")
         elif user_type == "teacher":
-            msg += f"<b>ПІП:</b> {teacher_name}\n"
+            msg += (f"<b>ПІП:</b> {teacher_name}\n"
+                    f"<b>Класний керівник:</b> {form or "не встановлено"}\n"
+                    f"<b>Статус верифікації:</b> {"✅" if is_verified else "❌"}\n")
         msg += "\n❓ Якщо ви зробили одрук, то використайте команду /register для повторної реєстрації"
 
         # виводимо користувачу
