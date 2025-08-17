@@ -2,7 +2,7 @@ from enum import Enum
 from dataclasses import dataclass
 
 from aiogram import F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
@@ -11,7 +11,8 @@ from src.keyboards.inline import TeacherManageForm
 
 
 class Triggers(str, Enum):
-    HANDLER = "👥 Мій клас"
+    MESSAGE = "👥 Мій клас"
+    CALLBACK = "teacher_my_form_hub"
 
 
 @dataclass(frozen=True)
@@ -27,17 +28,29 @@ class HubHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(
             self.handler,
-            F.text == Triggers.HANDLER
+            F.text == Triggers.MESSAGE
+        )
+
+        self.router.callback_query.register(
+            self.handler,
+            F.data == Triggers.CALLBACK
         )
 
     @classmethod
-    async def handler(cls, message: Message, state: FSMContext) -> None:
+    async def handler(cls, event: Message | CallbackQuery, state: FSMContext) -> None:
         await state.clear()
 
         # додати перевірку чи є клас
 
-        await message.answer(
-            Messages.HANDLER,
-            reply_markup=TeacherManageForm().get_keyboard(),
-            parse_mode=ParseMode.HTML
-        )
+        if isinstance(event, CallbackQuery):
+            await event.message.edit_text(
+                Messages.HANDLER,
+                reply_markup=TeacherManageForm().get_keyboard(),
+                parse_mode=ParseMode.HTML
+            )
+        else:
+            await event.answer(
+                Messages.HANDLER,
+                reply_markup=TeacherManageForm().get_keyboard(),
+                parse_mode=ParseMode.HTML
+            )
