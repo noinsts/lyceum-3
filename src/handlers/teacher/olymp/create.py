@@ -14,7 +14,7 @@ from src.utils import parse_hub_keyboard
 from src.states import CreateOlympStates
 from src.keyboards.reply import SkipButton, OlympStages, GetClass, UniversalKeyboard
 from src.keyboards.inline import SubmitKeyboard
-from src.responses import TeacherVerify
+from src.handlers.service.teacher_verify import TeacherVerifyHandler
 from src.db.connector import DBConnector
 from src.db.schemas import AddOlymp
 from src.validators import validate_date, validate_form, validate_student_name
@@ -170,7 +170,8 @@ class CreateHandler(BaseHandler):
         is_verified = await db.verification.is_verif(callback.from_user.id, teacher_name)
 
         if not is_verified:
-            await TeacherVerify.send_msg(callback)
+            await TeacherVerifyHandler().send_msg(callback, "sdgdfjkgdfhgkjfdhgjk")
+            # TODO: handlers/teachers/olymp/hub.py callback data
             raise ValidationError
 
         await state.update_data(teacher_name=teacher_name)
