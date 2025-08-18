@@ -3,6 +3,7 @@ from aiogram import Router
 from .calls import CallsHandler
 from .today_shorted import TodayShortedHandler
 from .resources import ResourcesHandler
+from .cards import get_all_cards_routers
 
 
 def get_a_router() -> Router:
@@ -12,7 +13,8 @@ def get_a_router() -> Router:
     routers = [
         CallsHandler().get_router(),
         TodayShortedHandler().get_router(),
-        ResourcesHandler().get_router()
+        ResourcesHandler().get_router(),
+        *get_all_cards_routers()
     ]
 
     for r in routers:
