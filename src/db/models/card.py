@@ -11,6 +11,7 @@ class CardModel(BaseModel):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
     sticker_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     rarity: Mapped[RarityCardsEnum] = mapped_column(
         PgEnum(RarityCardsEnum, name="rarity_card_enum"), nullable=False
