@@ -286,3 +286,12 @@ class TeacherManageForm(BaseKeyboard):
             [InlineKeyboardButton(text='📢 Написати оголошення', callback_data="my_form_broadcast")]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class CardHub(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="🎴 Моя колекція", callback_data="my_card_collection")],
+            [InlineKeyboardButton(text="✨ Вибить карточку", callback_data="new_card")]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
