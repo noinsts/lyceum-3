@@ -13,3 +13,4 @@ class DBConnector:
         self.verification = TeacherVerificationQueries(session)
         self.qualification = QualificationQueries(session)
         self.form = FormQueries(session)
+        self.card = CardQueries(session)
