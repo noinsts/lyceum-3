@@ -211,7 +211,6 @@ class TeacherOlympHub(BaseKeyboard):
 class DeveloperHub(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='Turn on khaos mode', callback_data="dev_khaos_on")],
             [InlineKeyboardButton(text='Access teacher account', callback_data="dev_access_hub")],
             [InlineKeyboardButton(text='Server stats', callback_data='dev_server_stats')],
             [InlineKeyboardButton(text='Broker', callback_data='dev_broker')]
