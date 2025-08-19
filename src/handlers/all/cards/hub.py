@@ -40,10 +40,10 @@ class HubHandler(BaseHandler):
             F.data == Triggers.CALLBACK
         )
 
-        self.router.message.register(
-            self.get_sticker_id,
-            F.sticker
-        )
+        # self.router.message.register(
+        #     self.get_sticker_id,
+        #     F.sticker
+        # )
 
     @classmethod
     async def hub(cls, event: Message | CallbackQuery, state: FSMContext) -> None:
