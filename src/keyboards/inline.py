@@ -1,15 +1,15 @@
 from typing import List, Optional, Tuple
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .base import BaseKeyboard
-from src.enums import TeacherTypeEnum, DepthSubjectEnum
+from src.enums import TeacherTypeEnum, DepthSubjectEnum, RarityCardsEnum
 from src.filters.callbacks import (
     TeacherCategoryCallback, TeacherListCallback,
     FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback,
     DepthSubjectCallback, BroadcastTypeCallback, BroadcastTypeEnum,
-    TeacherVerifyCallback, TeacherVerifyEnum
+    TeacherVerifyCallback, TeacherVerifyEnum, CardRarityCallback
 )
 
 
@@ -240,6 +240,23 @@ class DeveloperCollectionsHub(BaseKeyboard):
             [InlineKeyboardButton(text="Back to hub", callback_data="dev_hub")]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class CardRarity(BaseKeyboard):
+    def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+
+        for rarity in RarityCardsEnum:
+            kb.button(
+                text=rarity.value,
+                callback_data=CardRarityCallback(rarity=rarity.name).pack()
+            )
+
+        kb.button(text="Назад", callback_data=back_callback)
+
+        kb.adjust(1)
+        return kb.as_markup()
+
 
 class DeveloperSearchType(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
