@@ -5,6 +5,7 @@ from .developer_block import DeveloperSearchEnum, DeveloperSearchCallback
 from .depth_subject import DepthSubjectCallback
 from .broadcast_type import BroadcastTypeCallback, BroadcastTypeEnum
 from .teacher_verify import TeacherVerifyCallback, TeacherVerifyEnum
+from .card_rarity import CardRarityCallback
 
 __all__ = [
     "TeacherCategoryCallback",
@@ -16,5 +17,6 @@ __all__ = [
     "BroadcastTypeCallback",
     "BroadcastTypeEnum",
     "TeacherVerifyCallback",
-    "TeacherVerifyEnum"
+    "TeacherVerifyEnum",
+    "CardRarityCallback"
 ]
