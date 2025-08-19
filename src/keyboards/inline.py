@@ -233,6 +233,14 @@ class DeveloperAccessHub(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
+class DeveloperCollectionsHub(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="Create a new card", callback_data="dev_collections_add")],
+            [InlineKeyboardButton(text="Back to hub", callback_data="dev_hub")]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
 class DeveloperSearchType(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
