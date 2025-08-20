@@ -9,6 +9,7 @@ from aiogram.enums import ParseMode
 from ...base import BaseHandler
 from src.states.developer import AddStates
 from src.keyboards.inline import BackButton, CardRarity, SubmitKeyboard
+from src.keyboards.reply import SkipButton
 from src.decorators import next_state
 from src.enums import RarityCardsEnum
 from src.filters.callbacks import CardRarityCallback
@@ -22,9 +23,12 @@ class Triggers(str, Enum):
 
     SHOW_NAME = "dev_collections_add_show_name"
     SHOW_DESC = "dev_collections_add_show_desc"
+    SHOW_COLLECTION = "dev_collections_add_show_collection"
     SHOW_STICKER = "dev_collections_add_show_sticker"
 
     SUBMIT = "dev_collections_add_submit"
+
+    SKIP = "🚫 Пропустити"
 
 
 @dataclass(frozen=True)
@@ -35,6 +39,11 @@ class Messages:
 
     ENTER_A_DESC: str = (
         "Введіть опис колекційної картки"
+    )
+
+    ENTER_A_COLLECTION: str = (
+        "Чудово! Введіть колекцію, до якої буде прив'язана картка. "
+        "Якщо її немає, то натисніть кнопку нижче"
     )
 
     ENTER_A_STICKER: str = (
@@ -49,6 +58,7 @@ class Messages:
         "❓ <b>Ви хочете додати нову колекційну картку?</b>\n\n"
         "📛 <b>Ім’я</b>: {name}\n"
         "📝 <b>Опис</b>: {desc}\n"
+        "📦 <b>Колекція</b>: {collection}\n"
         "🌟 <b>Рідкість</b>: {rarity}\n\n"
         "<i>оберіть наступну дію</i>"
     )
@@ -56,7 +66,6 @@ class Messages:
     SUBMIT: str = (
         "✅ Успіх! Колекційна картка \"{name}\". Тепер її можна вибивать"
     )
-
 
 
 class AddHandler(BaseHandler):
@@ -88,6 +97,16 @@ class AddHandler(BaseHandler):
         self.router.message.register(
             self.get_desc,
             AddStates.waiting_for_description
+        )
+
+        self.router.callback_query.register(
+            self.show_collection,
+            F.data == Triggers.SHOW_COLLECTION
+        )
+
+        self.router.message.register(
+            self.get_collection,
+            AddStates.waiting_for_collection
         )
 
         self.router.callback_query.register(
@@ -147,13 +166,27 @@ class AddHandler(BaseHandler):
 
     async def get_desc(self, message: Message, state: FSMContext) -> None:
         await state.update_data(description=message.text)
+        await self.show_collection(message, state)
+
+    @next_state(AddStates.waiting_for_collection)
+    async def show_collection(self, event: Message | CallbackQuery, state: FSMContext) -> None:
+        kwargs = {
+            "text": Messages.ENTER_A_COLLECTION,
+            "reply_markup": SkipButton().get_keyboard()
+        }
+
+        await self._send_feedback(event, **kwargs)
+
+    async def get_collection(self, message: Message, state: FSMContext) -> None:
+        if message.text != Triggers.SKIP:
+            await state.update_data(collection=message.text)
         await self.show_sticker(message, state)
 
     @next_state(AddStates.waiting_for_sticker)
     async def show_sticker(self, event: Message | CallbackQuery, state: FSMContext) -> None:
         kwargs = {
             "text": Messages.ENTER_A_STICKER,
-            "reply_markup": BackButton().get_keyboard(Triggers.SHOW_DESC)
+            "reply_markup": BackButton().get_keyboard(Triggers.SHOW_COLLECTION)
         }
 
         await self._send_feedback(event, **kwargs)
@@ -182,15 +215,18 @@ class AddHandler(BaseHandler):
         data = await state.get_data()
         name = data.get("name")
         desc = data.get("description")
+        collection = data.get("collection", "відсутня")
         sticker_id = data.get("sticker_id")
         rarity = data.get("rarity")
 
+        await callback.message.delete()
         await callback.message.answer_sticker(sticker_id)
 
-        await callback.message.edit_text(
+        await callback.message.answer(
             Messages.CONFIRMATION.format(
                 name=name,
                 desc=desc,
+                collection=collection,
                 rarity=RarityCardsEnum[rarity].value
             ),
             reply_markup=SubmitKeyboard().get_keyboard(Triggers.SUBMIT, Triggers.HUB),
