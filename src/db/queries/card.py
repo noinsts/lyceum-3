@@ -1,7 +1,10 @@
+from typing import Optional, List
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..models import CardModel
+from ..models import CardModel, UserCardModel
 from ..schemas import CardSchema
 
 
@@ -17,3 +20,14 @@ class CardQueries:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
+
+    async def get_user_cards(self, user_id: int) -> Optional[List[CardModel]]:
+        """Повертає всі CardModel конкретного user_id"""
+        query = (
+            select(CardModel)
+            .join(UserCardModel, UserCardModel.card_id == CardModel.id)
+            .where(UserCardModel.user_id == user_id)
+        )
+
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
