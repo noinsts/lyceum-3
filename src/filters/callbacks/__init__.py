@@ -6,6 +6,7 @@ from .depth_subject import DepthSubjectCallback
 from .broadcast_type import BroadcastTypeCallback, BroadcastTypeEnum
 from .teacher_verify import TeacherVerifyCallback, TeacherVerifyEnum
 from .card_rarity import CardRarityCallback
+from .pagination import PaginationCallback
 
 __all__ = [
     "TeacherCategoryCallback",
@@ -18,5 +19,6 @@ __all__ = [
     "BroadcastTypeEnum",
     "TeacherVerifyCallback",
     "TeacherVerifyEnum",
-    "CardRarityCallback"
+    "CardRarityCallback",
+    "PaginationCallback"
 ]
