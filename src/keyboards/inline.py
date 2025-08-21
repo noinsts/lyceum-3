@@ -215,7 +215,8 @@ class DeveloperHub(BaseKeyboard):
             [InlineKeyboardButton(text='Access teacher account', callback_data="dev_access_hub")],
             [InlineKeyboardButton(text='Server stats', callback_data='dev_server_stats')],
             [InlineKeyboardButton(text='Broker', callback_data='dev_broker')],
-            [InlineKeyboardButton(text='Collections', callback_data='dev_collections_hub')]
+            [InlineKeyboardButton(text='Collections', callback_data='dev_collections_hub')],
+            [InlineKeyboardButton(text='Interesting', callback_data="dev_interesting_hub")]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
