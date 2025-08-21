@@ -6,6 +6,7 @@ from .qualification import TeacherQualificationModel
 from .form import FormModel
 from .card import CardModel
 from .user_cards import UserCardModel
+from .interesting import InterestingModel
 
 __all__ = [
     "OlympModel",
@@ -15,5 +16,6 @@ __all__ = [
     "TeacherQualificationModel",
     "FormModel",
     "CardModel",
-    "UserCardModel"
+    "UserCardModel",
+    "InterestingModel"
 ]
