@@ -14,3 +14,4 @@ class DBConnector:
         self.qualification = QualificationQueries(session)
         self.form = FormQueries(session)
         self.card = CardQueries(session)
+        self.interesting = InterestingQueries(session)
