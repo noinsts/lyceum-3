@@ -5,6 +5,7 @@ from .server_stats import ServerStatsHandler
 from .broker import DeveloperBrokerHandler
 from .hub import DevHubHandler
 from .collections import get_all_collections_routers
+from .interesting import get_interesting_routers
 from src.middlewares import RoleAccessMiddleware
 
 
@@ -17,7 +18,8 @@ def get_dev_routers() -> Router:
         DeveloperBrokerHandler().get_router(),
         DevHubHandler().get_router(),
         *get_all_collections_routers(),
-        *get_access_routers()
+        *get_access_routers(),
+        *get_interesting_routers()
     ]
 
     for r in routers:
