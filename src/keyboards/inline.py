@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .base import BaseKeyboard
@@ -9,7 +9,8 @@ from src.filters.callbacks import (
     TeacherCategoryCallback, TeacherListCallback,
     FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback,
     DepthSubjectCallback, BroadcastTypeCallback, BroadcastTypeEnum,
-    TeacherVerifyCallback, TeacherVerifyEnum, CardRarityCallback
+    TeacherVerifyCallback, TeacherVerifyEnum, CardRarityCallback,
+    PaginationCallback
 )
 
 
@@ -34,7 +35,7 @@ class HubAdmin(BaseKeyboard):
         kb = [
             [InlineKeyboardButton(text='📢 Створити оголошення', callback_data="announcement_hub")],
             [InlineKeyboardButton(text='📅 Змінити розклад', callback_data='admin_schedule_hub')],
-            [InlineKeyboardButton(text='🫐 Керування класами', callback_data='admin_form_controller_hub')],
+            [InlineKeyboardButton(text='🫐 Керування класами', callback_data='admin_form_controller_hub')]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
@@ -320,3 +321,32 @@ class CardHub(BaseKeyboard):
             [InlineKeyboardButton(text="✨ Вибить карточку", callback_data="new_card")]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class PaginationKeyboard(BaseKeyboard):
+    def get_keyboard(
+            self,
+            page: Optional[int] = 0,
+            total_pages: Optional[int] = 1,
+            back_callback: Optional[str] = None
+    ) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+
+        if page > 0:
+            kb.button(
+                text="◀️",
+                callback_data=PaginationCallback(page=page-1).pack()
+            )
+
+        kb.button(text=f"{page + 1}/{total_pages}", callback_data="current_page")
+
+        if page < total_pages - 1:
+            kb.button(
+                text="▶️",
+                callback_data=PaginationCallback(page=page+1).pack()
+            )
+
+        kb.button(text="Назад", callback_data=back_callback)
+
+        kb.adjust(3)
+        return kb.as_markup()
