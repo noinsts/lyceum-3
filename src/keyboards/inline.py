@@ -235,6 +235,15 @@ class DeveloperAccessHub(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
+class DeveloperInterestingHub(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="Add", callback_data="dev_interesting_add")],
+            [InlineKeyboardButton(text='Back to hub', callback_data="dev_hub")]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
 class DeveloperCollectionsHub(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
