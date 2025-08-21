@@ -1,8 +1,24 @@
+import datetime
+from dataclasses import dataclass
+
 from aiogram import F
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 
-from src.handlers.base import BaseHandler
+from ..base import BaseHandler
+from src.db.connector import DBConnector
+
+
+@dataclass(frozen=True)
+class Messages:
+    TITLE: str = (
+        "<b>🌎 Цікава кнопка</b> - це кнопка, що оновлюється щодня і пропонує цікаву та корисну інформацію. "
+        "Тут завжди можна знайти щось нове і несподіване, що зробить твій день трішки яскравішим."
+    )
+
+    NO_PROMPT: str = (
+        "Отета да, схоже сьогодні нічого нового..."
+    )
 
 
 class InterestingButtonHandler(BaseHandler):
@@ -12,20 +28,8 @@ class InterestingButtonHandler(BaseHandler):
             F.text == '🌎 Цікава кнопка'
         )
 
-    @staticmethod
-    async def handler(message: Message) -> None:
-        interesting_button = (
-            "<b>🌎 Цікава кнопка</b> - це кнопка, що оновлюється щодня і пропонує цікаву та корисну інформацію. "
-            "Тут завжди можна знайти щось нове і несподіване, що зробить твій день трішки яскравішим."
-        )
-
-        prompt = (
-            "<b>Мало хто знає, але Остапенко Михайло за це літо був три рази ведучим</b>\n\n"
-            "🔹 на випускному 9-х класів\n"
-            "🔹 на випускному 11-х класів\n"
-            "🔹 в Пулласі (Німеччина)\n\n"
-            "<i>7/27/2025 — Андрій (noinsts)</i>"
-        )
-
-        await message.answer(interesting_button, parse_mode=ParseMode.HTML)
-        await message.answer(prompt, parse_mode=ParseMode.HTML)
+    @classmethod
+    async def handler(cls, message: Message, db: DBConnector) -> None:
+        await message.answer(Messages.TITLE, parse_mode=ParseMode.HTML)
+        prompt = await db.interesting.get_by_date(datetime.date.today())
+        await message.answer(prompt or Messages.NO_PROMPT, parse_mode=ParseMode.HTML)
