@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional
 
 from aiogram import F
 from aiogram.types import CallbackQuery
@@ -32,6 +32,10 @@ class Messages:
 
     TITLE: str = (
         "<b>Колекційна картка користувача {first_name}</b>\n\n"
+    )
+
+    NOT_FOUND: str = (
+        "Карти не знайдено. Спробуйте знову"
     )
 
     CARD_INFO: str = (
@@ -69,9 +73,11 @@ class InventoryHandler(BaseHandler):
             await callback.answer(Messages.NO_CARDS, show_alert=True)
             raise ValidationError
 
-        await state.update_data(inventory=inventory)
+        ids = [card.id for card in inventory]
+        await state.update_data(inventory=ids)
 
-        response = self._get_card_info(0, callback.from_user.first_name, inventory)
+        card = await db.card.get_card_by_id(ids[0])
+        response = self._get_card_info(callback.from_user.first_name, card)
 
         await callback.message.edit_text(
             response,
@@ -83,12 +89,19 @@ class InventoryHandler(BaseHandler):
             self,
             callback: CallbackQuery,
             state: FSMContext,
+            db: DBConnector,
             callback_data: PaginationCallback
     ) -> None:
         page = callback_data.page
 
         inventory = (await state.get_data()).get("inventory")
-        info = self._get_card_info(page, callback.from_user.first_name, inventory)
+
+        if not (0 <= page < len(inventory)):
+            await callback.answer(Messages.NOT_FOUND, show_alert=True)
+            return
+
+        card = await db.card.get_card_by_id(inventory[page])
+        info = self._get_card_info(callback.from_user.first_name, card)
 
         await callback.message.edit_text(
             info,
@@ -104,12 +117,7 @@ class InventoryHandler(BaseHandler):
     # Приватні методи
     # ==============================
 
-    def _get_card_info(self, page: int, first_name: str, inventory: List[CardModel]) -> Optional[str]:
-        if not (0 <= page < len(inventory)):
-            return None
-
-        card = inventory[page]
-
+    def _get_card_info(self, first_name: str, card: CardModel) -> Optional[str]:
         return "\n".join([
             Messages.TITLE.format(first_name=first_name or "Користувач"),
             Messages.CARD_INFO.format(
