@@ -2,7 +2,6 @@ from sqlalchemy import Integer, BigInteger, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import BaseModel
-from .card import CardModel
 
 
 class UserCardModel(BaseModel):
