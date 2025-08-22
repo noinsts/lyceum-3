@@ -16,3 +16,12 @@ class InterestingQueries:
         query = select(InterestingModel.prompt).where(InterestingModel.date == date)
         result = await self.session.execute(query)
         return result.scalar()
+
+    async def add_new(self, prompt: str, date: datetime.date) -> None:
+        try:
+            obj = InterestingModel(prompt=prompt, date=date)
+            self.session.add(obj)
+            await self.session.commit()
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise e
