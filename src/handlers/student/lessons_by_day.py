@@ -75,7 +75,7 @@ class LessonsByDaysHandler(BaseHandler):
 
         day_word = "завтра" if is_tomorrow else "сьогодні"
         lessons_list = [
-            f"<b>{lesson_id}</b>: <b>{name}</b> з {teacher.replace(',', ' та')}\n\n"
+            f"<b>{lesson_id}</b>: <b>{name}</b> з {teacher.replace(',', ' та')}"
             for lesson_id, name, teacher in results
         ]
         prompt = f"<b>Розклад уроків на {day_word}</b>\n\n" + "\n".join(lessons_list)
