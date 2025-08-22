@@ -46,3 +46,12 @@ class CardQueries:
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+
+    async def user_new_card(self, user_id: int, card_id: int) -> None:
+        try:
+            obj = UserCardModel(user_id=user_id, card_id=card_id)
+            self.session.add(obj)
+            await self.session.commit()
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise e
