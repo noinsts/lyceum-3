@@ -31,3 +31,9 @@ class CardQueries:
 
         result = await self.session.execute(query)
         return list(result.scalars().all())
+
+    async def get_card_by_id(self, card_id: int) -> Optional[CardModel]:
+        """Повертає CardModel за ID картки"""
+        query = select(CardModel).where(CardModel.id == card_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
