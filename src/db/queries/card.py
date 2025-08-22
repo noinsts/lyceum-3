@@ -1,11 +1,13 @@
+import datetime
 from typing import Optional, List
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from ..models import CardModel, UserCardModel
 from ..schemas import CardSchema
+from src.enums import RarityCardsEnum
 
 
 class CardQueries:
@@ -55,3 +57,38 @@ class CardQueries:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
+
+    async def get_available_cards_grouped_by_rarity(
+            self,
+            user_id: int,
+            rarities: List[RarityCardsEnum]
+    ) -> dict[RarityCardsEnum, List[CardModel]]:
+        """
+        Повертає доступні картки (які користувач ще не має), згруповані за рідкістю.
+        Один запит замість циклу - значно швидше!
+        """
+        user_cards_subquery = (
+            select(UserCardModel.card_id)
+            .where(UserCardModel.user_id == user_id)
+            .subquery()
+        )
+
+        query = (
+            select(CardModel)
+            .where(
+                CardModel.rarity.in_(rarities),
+                ~CardModel.id.in_(select(user_cards_subquery.c.card_id))
+            )
+            .order_by(CardModel.rarity, CardModel.id)
+        )
+
+        result = await self.session.execute(query)
+        cards = result.scalars().all()
+
+        grouped_cards = {}
+        for card in cards:
+            if card.rarity not in grouped_cards:
+                grouped_cards[card.rarity] = []
+            grouped_cards[card.rarity].append(card)
+
+        return grouped_cards
