@@ -37,3 +37,12 @@ class CardQueries:
         query = select(CardModel).where(CardModel.id == card_id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+
+    async def get_last_drop_time(self, user_id: int) -> Optional[datetime.datetime]:
+        """Повертає час останньої випавшої користувачу картки"""
+        query = (
+            select(func.max(UserCardModel.created))
+            .where(UserCardModel.user_id == user_id)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
