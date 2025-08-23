@@ -7,7 +7,7 @@ from .base import BaseModel
 
 
 class DayModel(BaseModel):
-    __tablename__ = "shortened_day"
+    __tablename__ = "day"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     is_shortened: Mapped[bool] = mapped_column(Boolean, nullable=False)
