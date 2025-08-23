@@ -15,3 +15,4 @@ class DBConnector:
         self.form = FormQueries(session)
         self.card = CardQueries(session)
         self.interesting = InterestingQueries(session)
+        self.shortened = ShortenedQueries(session)
