@@ -39,7 +39,7 @@ class TodayShortenedHandler(BaseHandler):
     @staticmethod
     async def handler(message: Message, db: DBConnector) -> None:
         date = message.date.astimezone(KYIV_TZ).date()
-        day = await db.shortened.get_day(date)
+        day = await db.day.get_day(date)
         await message.answer(
             Messages.SHORTENED.format(day.call_schedule)
             if day and day.status else Messages.DEFAULT,

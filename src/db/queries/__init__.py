@@ -4,7 +4,7 @@ from .verification import TeacherVerificationQueries
 from .qualification import QualificationQueries
 from .card import CardQueries
 from .interesting import InterestingQueries
-from .shortened import ShortenedQueries
+from .day import DayQueries
 
 __all__ = [
     "TeacherVerificationQueries",
@@ -13,5 +13,5 @@ __all__ = [
     "QualificationQueries",
     "CardQueries",
     "InterestingQueries",
-    "ShortenedQueries"
+    "DayQueries"
 ]
