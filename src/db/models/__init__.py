@@ -7,6 +7,7 @@ from .form import FormModel
 from .card import CardModel
 from .user_cards import UserCardModel
 from .interesting import InterestingModel
+from .shortened_day import ShortenedDayModel
 
 __all__ = [
     "OlympModel",
@@ -17,5 +18,6 @@ __all__ = [
     "FormModel",
     "CardModel",
     "UserCardModel",
-    "InterestingModel"
+    "InterestingModel",
+    "ShortenedDayModel"
 ]
