@@ -41,7 +41,7 @@ class TodayShortenedHandler(BaseHandler):
         date = message.date.astimezone(KYIV_TZ).date()
         day = await db.day.get_day(date)
         await message.answer(
-            Messages.SHORTENED.format(day.call_schedule)
+            Messages.SHORTENED.format(call_schedule=day.call_schedule)
             if day and day.is_shortened else Messages.DEFAULT,
             parse_mode=ParseMode.HTML
         )
