@@ -56,16 +56,16 @@ class DropHandler(BaseHandler):
         )
 
     async def handler(self, callback: CallbackQuery, db: DBConnector) -> None:
-        last_time_drop = await db.card.get_last_drop_time(callback.from_user.id)
-
-        if self._check_time_limit(last_time_drop):
-            await callback.answer(self._format_time_left(last_time_drop), show_alert=True)
-            return
-
         card = await self._get_card(callback.from_user.id, db)
 
         if not card:
             await callback.answer(Messages.ALL_COLLECTED, show_alert=True)
+            return
+
+        last_time_drop = await db.card.get_last_drop_time(callback.from_user.id)
+
+        if self._check_time_limit(last_time_drop):
+            await callback.answer(self._format_time_left(last_time_drop), show_alert=True)
             return
 
         await callback.message.delete()
