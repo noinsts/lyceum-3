@@ -42,6 +42,17 @@ class HubAdmin(BaseKeyboard):
         return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
+class HubAdminShortened(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="Set", callback_data="admin_shortened_set")],
+            [InlineKeyboardButton(text="Get", callback_data="admin_shortened_get")],
+            [InlineKeyboardButton(text="Back", callback_data="back_to_admin_hub")]
+        ]
+
+        return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
 class HubAdminSchedule(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
