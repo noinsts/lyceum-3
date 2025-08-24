@@ -10,7 +10,7 @@ from src.filters.callbacks import (
     FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback,
     DepthSubjectCallback, BroadcastTypeCallback, BroadcastTypeEnum,
     TeacherVerifyCallback, TeacherVerifyEnum, CardRarityCallback,
-    PaginationCallback
+    PaginationCallback, BooleanCallback
 )
 
 
@@ -372,3 +372,13 @@ class PaginationKeyboard(BaseKeyboard):
 
         kb.adjust(3)
         return kb.as_markup()
+
+
+class BooleanKeyboard(BaseKeyboard):
+    def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="True", callback_data=BooleanCallback(boolean=True).pack()),
+             InlineKeyboardButton(text="False", callback_data=BooleanCallback(boolean=False).pack())],
+            [InlineKeyboardButton(text='Back', callback_data=back_callback)]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
