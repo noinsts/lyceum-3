@@ -7,6 +7,7 @@ from .broadcast_type import BroadcastTypeCallback, BroadcastTypeEnum
 from .teacher_verify import TeacherVerifyCallback, TeacherVerifyEnum
 from .card_rarity import CardRarityCallback
 from .pagination import PaginationCallback
+from .boolean import BooleanCallback
 
 __all__ = [
     "TeacherCategoryCallback",
@@ -20,5 +21,6 @@ __all__ = [
     "TeacherVerifyCallback",
     "TeacherVerifyEnum",
     "CardRarityCallback",
-    "PaginationCallback"
+    "PaginationCallback",
+    "BooleanCallback"
 ]
