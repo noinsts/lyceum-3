@@ -1,4 +1,5 @@
 from aiogram import F
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from ...base import BaseHandler
@@ -30,9 +31,9 @@ class AccessHubHandler(BaseHandler):
         )
 
     @staticmethod
-    async def handler(callback: CallbackQuery) -> None:
-        await callback.answer()
-        await callback.message.answer(
+    async def handler(callback: CallbackQuery, state: FSMContext) -> None:
+        await state.clear()
+        await callback.message.edit_text(
             Messages.ASCII,
             reply_markup=DeveloperAccessHub().get_keyboard()
         )
