@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 import psutil
 from aiogram import F
@@ -6,13 +7,19 @@ from aiogram.types import CallbackQuery
 from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
+from src.keyboards.inline import BackButton
+
+
+class Triggers(str, Enum):
+    HUB = "dev_hub"
+    HANDLER = "dev_server_stats"
 
 
 class ServerStatsHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.callback_query.register(
             self.handler,
-            F.data == "dev_server_stats"
+            F.data == Triggers.HANDLER
         )
 
     @classmethod
@@ -25,11 +32,15 @@ class ServerStatsHandler(BaseHandler):
 
         text = (
             f"📊 <b>Статистика системи та процесу</b>\n\n"
-            f"🔹 CPU завантаження (всього): {psutil.cpu_percent()}%\n"
-            f"🔹 CPU твого процесу: {cpu_usage}%\n"
-            f"🔹 Вільна пам'ять: {ram.available / (1024**2):.2f} MB\n"
-            f"🔹 Пам'ять процесу: {mem_info.rss / (1024**2):.2f} MB\n"
-            f"🔹 Використання диску: {disk.percent}%"
+            f"🔹 <b>CPU завантаження (всього)</b>: {psutil.cpu_percent()}%\n"
+            f"🔹 <b>CPU твого процесу</b>: {cpu_usage}%\n"
+            f"🔹 <b>Вільна пам'ять</b>: {ram.available / (1024**2):.2f} MB\n"
+            f"🔹 <b>Пам'ять процесу</b>: {mem_info.rss / (1024**2):.2f} MB\n"
+            f"🔹 <b>Використання диску</b>: {disk.percent}%"
         )
 
-        await callback.message.answer(text, parse_mode=ParseMode.HTML)
+        await callback.message.edit_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=BackButton().get_keyboard(Triggers.HUB)
+        )
