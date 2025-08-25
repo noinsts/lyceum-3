@@ -20,7 +20,7 @@
 
     Повідомлення змінить свій вигляд на наступний:
 
-    <img src="/assets/admin/schedule_hub.jpg" width="300">
+    <img src="/assets/admin/schedule/hub.jpg" width="300">
 
 ### Учні
 
