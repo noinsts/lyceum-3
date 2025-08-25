@@ -14,13 +14,13 @@
     
     Ви отримаєте наступне:
 
-    <img src="assets/admin.jpg" width="300">
+    <img src="/assets/admin.jpg" width="300">
 
 2. Натискаємо на кнопку `📅 Змінити розклад`
 
     Повідомлення змінить свій вигляд на наступний:
 
-    <img src="assets/admin/schedule_hub.jpg" width="300">
+    <img src="/assets/admin/schedule_hub.jpg" width="300">
 
 ### Учні
 
@@ -28,7 +28,7 @@
    
     Якщо місяць в правильній фазі, то побачите наступне
 
-    <img src="assets/admin/schedule/student/select_form.jpg" width="300">
+    <img src="/assets/admin/schedule/student/select_form.jpg" width="300">
 
 2. Обираєте всі потрібні вам класи
    
@@ -38,11 +38,11 @@
 
     - додали:
 
-        <img src="assets/admin/schedule/student/add_form.jpg" width="300">
+        <img src="/assets/admin/schedule/student/add_form.jpg" width="300">
    
     - видалили:
     
-        <img src="assets/admin/schedule/student/del_form.jpg" width="300">
+        <img src="/assets/admin/schedule/student/del_form.jpg" width="300">
    
     > Коли вам наскучить обирати класи, то на вибір у вас є ще інші кнопки
 
@@ -52,11 +52,11 @@
 
     При натисканні на неї буде приблизно отаке
 
-    <img src="assets/admin/schedule/student/confirmation.jpg" width="300">
+    <img src="/assets/admin/schedule/student/confirmation.jpg" width="300">
 
     - `✅ Так, підтвердити`
     
-      <img src="assets/admin/schedule/student/submit.jpg" width="300">
+      <img src="/assets/admin/schedule/student/submit.jpg" width="300">
       
       Ви отримуєте таки сповіщення, де бачите метрики
 
