@@ -212,10 +212,10 @@ class SubmitKeyboard(BaseKeyboard):
 class TeacherOlympHub(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='Створити нову олімпіаду', callback_data='create_new_olymp')],
-            [InlineKeyboardButton(text='Редагувати наявну', callback_data='edit_olymp')],
-            [InlineKeyboardButton(text='Видалити', callback_data='delete_olymp')],
-            [InlineKeyboardButton(text='Список олімпіад', callback_data='list_olymps')]
+            [InlineKeyboardButton(text='🆕 Створити нову олімпіаду', callback_data='create_new_olymp')],
+            [InlineKeyboardButton(text='✏️ Редагувати наявну (розробка)', callback_data='edit_olymp')],
+            [InlineKeyboardButton(text='🗑️ Видалити (розробка)', callback_data='delete_olymp')],
+            [InlineKeyboardButton(text='📋 Список олімпіад (розробка)', callback_data='list_olymps')]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
