@@ -241,7 +241,8 @@ class DeveloperAccessHub(BaseKeyboard):
             [InlineKeyboardButton(text='📊 Stats', callback_data='dev_access_stats')],
             [InlineKeyboardButton(text='🚫 Block', callback_data='dev_access_block')],
             [InlineKeyboardButton(text='✅ Unblock', callback_data='dev_access_unblock')],
-            [InlineKeyboardButton(text='ℹ️ Status', callback_data='dev_access_status')]
+            [InlineKeyboardButton(text='ℹ️ Status', callback_data='dev_access_status')],
+            [InlineKeyboardButton(text="🔙 Back", callback_data='dev_hub')]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
