@@ -8,6 +8,7 @@ from .teacher_verify import TeacherVerifyCallback, TeacherVerifyEnum
 from .card_rarity import CardRarityCallback
 from .pagination import PaginationCallback
 from .boolean import BooleanCallback
+from .user_type import UserTypeCallback
 
 __all__ = [
     "TeacherCategoryCallback",
@@ -22,5 +23,6 @@ __all__ = [
     "TeacherVerifyEnum",
     "CardRarityCallback",
     "PaginationCallback",
-    "BooleanCallback"
+    "BooleanCallback",
+    "UserTypeCallback"
 ]
