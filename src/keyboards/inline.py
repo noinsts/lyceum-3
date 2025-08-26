@@ -4,13 +4,13 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .base import BaseKeyboard
-from src.enums import TeacherTypeEnum, DepthSubjectEnum, RarityCardsEnum
+from src.enums import TeacherTypeEnum, DepthSubjectEnum, RarityCardsEnum, DBUserType
 from src.filters.callbacks import (
     TeacherCategoryCallback, TeacherListCallback,
     FormsListCallback, DeveloperSearchEnum, DeveloperSearchCallback,
     DepthSubjectCallback, BroadcastTypeCallback, BroadcastTypeEnum,
     TeacherVerifyCallback, TeacherVerifyEnum, CardRarityCallback,
-    PaginationCallback, BooleanCallback
+    PaginationCallback, BooleanCallback, UserTypeCallback
 )
 
 
@@ -383,6 +383,25 @@ class BooleanKeyboard(BaseKeyboard):
             [InlineKeyboardButton(text='Back', callback_data=back_callback)]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class UserTypeKeyboard(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+
+        text = {
+            "student": "Учень",
+            "teacher": "Вчитель"
+        }
+
+        for val in DBUserType:
+            kb.button(
+                text=text[val.value],
+                callback_data=UserTypeCallback(utype=val.name).pack()
+            )
+
+        kb.adjust(1)
+        return kb.as_markup()
 
 
 class Resources(BaseKeyboard):
