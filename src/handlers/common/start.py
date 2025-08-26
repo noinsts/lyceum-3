@@ -30,7 +30,7 @@ class StartHandler(BaseHandler):
             await DevHubHandler().show_hub(message, state)
 
         if user_id in admins:
-            await AdminHubHandler().show_hub(message)
+            await AdminHubHandler().show_hub(message, state)
 
         if await db.register.is_exists(user_id):
             # якщо користувач зареєстрований
