@@ -32,11 +32,11 @@ class GetClass(BaseKeyboard):
 class HubMenu(BaseKeyboard):
     def get_keyboard(self) -> ReplyKeyboardMarkup:
         kb = [
-            [KeyboardButton(text='➡️ Наступний урок'), KeyboardButton(text='🔔 Розклад дзвінків')],
             [KeyboardButton(text='📅 Розклад на сьогодні'), KeyboardButton(text='🌇 Розклад на завтра')],
-            [KeyboardButton(text='📝 Розклад на весь тиждень'), KeyboardButton(text='🌎 Цікава кнопка')],
-            [KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='❓ Сьогодні скорочені уроки?')],
-            [KeyboardButton(text='🤓 Олімпіади'), KeyboardButton(text="🃏 Колекції (demo)")]
+            [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='📝 Розклад на весь тиждень')],
+            [KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='🌎 Цікава кнопка'),
+             KeyboardButton(text='🤓 Олімпіади')],
+            [KeyboardButton(text='❓ Сьогодні скорочені уроки?'), KeyboardButton(text="🃏 Колекції")]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 
@@ -46,18 +46,10 @@ class HubTeacher(BaseKeyboard):
         kb = [
             [KeyboardButton(text='🚦 Мій пост'), KeyboardButton(text='📅 Класи на сьогодні')],
             [KeyboardButton(text='📝 Тижневий розклад'), KeyboardButton(text='🌅 Розклад на завтра')],
-            [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='🌐 Ресурси школи')],
+            [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text="🃏 Колекції"),
+             KeyboardButton(text='🌐 Ресурси школи')],
             [KeyboardButton(text='❓ Сьогодні скорочені уроки?'), KeyboardButton(text="👥 Мій клас")],
-            [KeyboardButton(text='⏰ Кількість академічних годин'), KeyboardButton(text='🚀 Хаб олімпіад')],
-            [KeyboardButton(text="🃏 Колекції (demo)")]
-        ]
-        return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
-
-
-class HubStats(BaseKeyboard):
-    def get_keyboard(self) -> ReplyKeyboardMarkup:
-        kb = [
-            [KeyboardButton(text='Статистика зареєстрованих учасників по класах')]
+            [KeyboardButton(text='⏰ Кількість академічних годин'), KeyboardButton(text='🚀 Хаб олімпіад')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 
