@@ -43,7 +43,7 @@ class AntiSpamMiddleware(BaseMiddleware):
             time_passed = now - self.user_times[user_id]
 
             if time_passed < self.timeout:
-                text = "Не спіши!"
+                text = "Не спамте, будь ласка"
 
                 logger.warning(
                     f"{user_id} // {event.from_user.first_name or "pass"}, "
