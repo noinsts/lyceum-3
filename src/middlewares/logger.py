@@ -171,7 +171,8 @@ class LoggingMiddleware(BaseMiddleware):
                     event.chat.id,
                     "😔 Виникла помилка під час обробки вашого запиту. "
                     f"Спробуйте ще раз або зверніться до адміністратора.\n"
-                    f"ID помилки: {request_id}"
+                    f"ID помилки: {request_id}\n\n"
+                    "Для допомоги можете написати в дірект @omyzsh"
                 )
             elif isinstance(event, CallbackQuery) and event.bot:
                 await event.answer(
