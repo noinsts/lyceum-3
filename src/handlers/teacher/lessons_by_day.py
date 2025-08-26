@@ -33,8 +33,6 @@ class Messages:
 
     STICKER = "CAACAgIAAxkBAAEOZ1doFUn9Y0TR-qURiQeEb7HZdGC2qQACOjMAAlG5gEjH0Q7wxWFwrDYE"
 
-    DEV_BADGE = "\n<i>Знайшли неточність? Будь-ласка повідомте @noinsts</i>"
-
 
 class LessonsByDaysHandler(BaseHandler):
     def register_handler(self) -> None:
@@ -71,9 +69,6 @@ class LessonsByDaysHandler(BaseHandler):
             return
 
         lessons_list = [f"<b>{lesson_id}</b>: {subject} з {form}" for lesson_id, subject, form in results]
-        prompt = f'<b>Список класів на {day_word}</b>\n\n' + "\n".join(lessons_list) + Messages.DEV_BADGE
-
-        # TODO: dev badge
-        prompt += Messages.DEV_BADGE
+        prompt = f'<b>Список класів на {day_word}</b>\n\n' + "\n".join(lessons_list)
 
         await message.answer(prompt, parse_mode=ParseMode.HTML)
