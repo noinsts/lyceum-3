@@ -383,3 +383,16 @@ class BooleanKeyboard(BaseKeyboard):
             [InlineKeyboardButton(text='Back', callback_data=back_callback)]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class Resources(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="🌐 Сайт школи", url="https://www.bnvk.pp.ua/"),
+             InlineKeyboardButton(
+                text="📘 Facebook",
+                url="https://www.facebook.com/profile.php?id=100035666301370")
+            ],
+            [InlineKeyboardButton(text="💬 Telegram (неофіційний)", url="https://www.t.me/omyzsh/")]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
