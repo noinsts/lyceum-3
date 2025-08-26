@@ -11,7 +11,7 @@ from src.keyboards.inline import CardHub
 
 
 class Triggers(str, Enum):
-    MESSAGE = "🃏 Колекції (demo)"
+    MESSAGE = "🃏 Колекції"
     CALLBACK = "card_hub"
 
 
