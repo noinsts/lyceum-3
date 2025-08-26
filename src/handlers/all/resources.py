@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
 from ..base import BaseHandler
+from src.keyboards.inline import Resources
 
 
 class Triggers(str, Enum):
@@ -15,13 +16,7 @@ class Triggers(str, Enum):
 
 @dataclass(frozen=True)
 class Messages:
-    PROMPT: str = (
-        "<b>Ось корисні посилання, щоб завжди бути в курсі шкільних подій</b>:\n\n"
-        "🔹 <b>Сайт школи</b>: <a href=\"https://bnvk.pp.ua\">bnvk.pp.ua</a>\n"
-        "🔹 <b>Facebook-група</b>: тут публікуються найсвіжіші новини — "
-        "<a href=\"https://www.facebook.com/profile.php?id=100035666301370\">перейти</a>\n"
-        "🔹 <b>Telegram-канал</b> (неофіційний): <a href=\"https://t.me/omyzsh\">тик</a>"
-    )
+    TITLE: str = "<b>Ось корисні посилання, щоб завжди бути в курсі шкільних подій</b>"
 
 
 class ResourcesHandler(BaseHandler):
@@ -34,4 +29,8 @@ class ResourcesHandler(BaseHandler):
     @classmethod
     async def handler(cls, message: Message, state: FSMContext) -> None:
         await state.clear()
-        await message.answer(Messages.PROMPT, parse_mode=ParseMode.HTML)
+        await message.answer(
+            Messages.TITLE,
+            parse_mode=ParseMode.HTML,
+            reply_markup=Resources().get_keyboard()
+        )
