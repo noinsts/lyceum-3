@@ -11,16 +11,6 @@ class UniversalKeyboard(BaseKeyboard):
         kb = [[KeyboardButton(text=obj) for obj in arr]]
         return ReplyKeyboardMarkup(keyboard=kb)
 
-"""Registration"""
-
-
-class GetType(BaseKeyboard):
-    def get_keyboard(self) -> ReplyKeyboardMarkup:
-        kb = [
-            [KeyboardButton(text='👨‍🎓 Учень'), KeyboardButton(text='👨‍🏫 Вчитель')]
-        ]
-        return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
-
 
 class GetClass(BaseKeyboard):
     def get_keyboard(self, classes: Optional[List] = None) -> ReplyKeyboardMarkup:
