@@ -10,7 +10,7 @@ from src.bot_instance import set_bot
 from src.handlers import get_all_router
 from src.utils import setup_logger
 from src.db.db import create_db
-from src.middlewares import DBMiddleware, LoggingMiddleware
+from src.middlewares import DBMiddleware, LoggingMiddleware, AntiSpamMiddleware
 from src.sheets.connector import get_sheet, get_redis
 
 load_dotenv()
@@ -41,6 +41,11 @@ class LyceumBot:
 
             sheet = await get_sheet()
             self.log.info(f"Google Sheets підключено! {str(sheet)}")
+
+            # підключення anti spam middleware
+            anti_spam_middleware = AntiSpamMiddleware()
+            self.dp.message.middleware(anti_spam_middleware)
+            self.dp.callback_query.middleware(anti_spam_middleware)
 
             # підключення database middleware
             db_middleware = DBMiddleware()
