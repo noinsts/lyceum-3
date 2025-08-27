@@ -1,7 +1,9 @@
+from typing import Optional
 import asyncio
 import os
 
 from aiogram import Bot, Dispatcher
+from aiogram.types import ErrorEvent
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 from dotenv import load_dotenv
@@ -12,6 +14,7 @@ from src.utils import setup_logger
 from src.db.db import create_db
 from src.middlewares import DBMiddleware, LoggingMiddleware, AntiSpamMiddleware
 from src.sheets.connector import get_sheet, get_redis
+from src.exceptions import ValidationError
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -38,6 +41,12 @@ class LyceumBot:
                 self.storage = RedisStorage(redis=redis)
 
             self.dp = Dispatcher(storage=self.storage)
+
+            @self.dp.errors()
+            async def validation_handler(event: ErrorEvent) -> Optional[bool]:
+                if isinstance(event.exception, ValidationError):
+                    return True
+                return None
 
             sheet = await get_sheet()
             self.log.info(f"Google Sheets підключено! {str(sheet)}")
