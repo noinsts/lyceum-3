@@ -56,8 +56,8 @@ class HubAdminShortened(BaseKeyboard):
 class HubAdminSchedule(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='🧑🏻‍🎓', callback_data='change_schedule_student'),
-             InlineKeyboardButton(text='🧑🏻‍🏫', callback_data='change_schedule_teacher')],
+            [InlineKeyboardButton(text='🧑🏻‍🎓', callback_data='admin_schedule_student'),
+             InlineKeyboardButton(text='🧑🏻‍🏫', callback_data='admin_schedule_teacher')],
             [InlineKeyboardButton(text='🔃 Refresh', callback_data='refresh_cache_schedule')],
             [InlineKeyboardButton(text='⬅️ Назад', callback_data='back_to_admin_hub')]
         ]
