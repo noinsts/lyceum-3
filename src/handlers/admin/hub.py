@@ -24,7 +24,7 @@ class Messages:
 class AdminHubHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.show_hub, Command(Triggers.COMMAND))
-        self.router.callback_query.register(self.show_hub, F.data == Triggers.COMMAND)
+        self.router.callback_query.register(self.show_hub, F.data == Triggers.CALLBACK)
 
     @classmethod
     async def show_hub(cls, event: Message | CallbackQuery, state: FSMContext) -> None:
