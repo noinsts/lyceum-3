@@ -1,0 +1,21 @@
+from sqlalchemy import String, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
+
+from .base import BaseModel
+from src.enums import RarityCardsEnum
+
+
+class CardModel(BaseModel):
+    __tablename__ = "card"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+    collection: Mapped[str] = mapped_column(String, nullable=True)
+    sticker_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    rarity: Mapped[RarityCardsEnum] = mapped_column(
+        PgEnum(RarityCardsEnum, name="rarity_card_enum"), nullable=False
+    )
+
+    user_cards: Mapped[list["UserCardModel"]] = relationship(back_populates="card")

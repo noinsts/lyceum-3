@@ -3,6 +3,9 @@
 /db
 *.db
 *.log
-/src/creds
+/creds
 *.pyc
 .env
+/settings/admins.py
+/settings/developers.py
+/logs
