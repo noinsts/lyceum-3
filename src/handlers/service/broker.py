@@ -21,7 +21,7 @@ from src.filters.callbacks import (
 )
 from src.keyboards.inline import (
     BroadcastType, SelectForm, TeacherTypes, TeacherList,
-    BackButton, AdminTeacherBackToCategory, SubmitKeyboard
+    BackButton, AddingListKeyboard, SubmitKeyboard
 )
 from src.decorators import next_state
 from src.states import BrokerStates
@@ -300,7 +300,7 @@ class BrokerSystemHandler(BaseHandler, ABC):
         await callback.message.edit_text(
             "\n".join(prompt),
             parse_mode=ParseMode.HTML,
-            reply_markup=AdminTeacherBackToCategory().get_keyboard(Triggers.FORM_SHOW, Triggers.FORM_DONE)
+            reply_markup=AddingListKeyboard().get_keyboard(Triggers.FORM_SHOW, Triggers.FORM_DONE)
         )
 
     async def forms_done(self, callback: CallbackQuery, state: FSMContext) -> None:

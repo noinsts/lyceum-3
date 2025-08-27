@@ -157,7 +157,7 @@ class TeacherList(BaseKeyboard):
         return kb.as_markup()
 
 
-class AdminTeacherBackToCategory(BaseKeyboard):
+class AddingListKeyboard(BaseKeyboard):
     def get_keyboard(
             self,
             continue_adding: Optional[str] = "admin_back_to_select_category",
