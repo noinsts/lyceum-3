@@ -1,4 +1,7 @@
-from typing import List, Set, Optional, Tuple
+from typing import List, Set, Optional, Tuple, Callable
+from dataclasses import dataclass
+from functools import wraps
+from enum import Enum
 
 from aiogram import F
 from aiogram.types import CallbackQuery
@@ -6,29 +9,90 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
-from src.db.connector import DBConnector
 from ...base import BaseHandler
+from src.db.connector import DBConnector
 from src.states.admin import TeacherSchedule
-from src.keyboards.inline import TeacherTypes, TeacherList, AdminTeacherBackToCategory, SubmitKeyboard
+from src.keyboards.inline import TeacherTypes, TeacherList, AddingListKeyboard, SubmitKeyboard, BackButton
 from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback
 from src.enums import TeacherTypeEnum
 from src.service import broadcast
 from src.utils import JSONLoader
+from src.decorators import next_state
+from src.exceptions import ValidationError
 
-HANDLER_TRIGGER = "change_schedule_teacher"
-BACK_TRIGGGER = "admin_back_to_select_category"
-DONE_TRIGGER = "selected_teacher_done"
-LIST_TRIGGER = "selected_teacher_list"
-SUBMIT_TRIGGER = "submit_admin_schedule_teacher"
-CANCEL_TRIGGER = "cancel_admin_schedule_teacher"
+
+def check_selected_forms():
+    """
+    Перевіряє наявність обраних вчителів
+    """
+    def decorator(handler_func: Callable):
+        @wraps(handler_func)
+        async def wrapper(self, event: CallbackQuery, state: FSMContext, *args, **kwargs):
+            selected_teachers = set((await state.get_data()).get("selected_teacher_ids", []))
+
+            if not selected_teachers:
+                await event.answer(Messages.NOT_SELECTED_TEACHER, show_alert=True)
+                raise ValidationError
+
+            await handler_func(self, event, state, teachers=selected_teachers, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+class Triggers(str, Enum):
+    HUB = "admin_schedule_hub"
+    HANDLER = "admin_schedule_teacher"
+    SUBMIT = "admin_schedule_teacher_submit"
+
+    DONE = "selected_teacher_done"
+    LIST = "selected_teacher_list"
+
+
+@dataclass(frozen=True)
+class Messages:
+    SELECT_CATEGORY: str = (
+        "Нижче оберіть категорію вчителя"
+    )
+
+    SELECT_NAME: str = (
+        "Ви обрали: {category}, тепер оберіть потрібних вчителів"
+    )
+
+    NOT_FOUND_TEACHERS: str = (
+        "❌ Помилка. Вчителів не знайдено. Зверніться до розробників."
+    )
+
+    NOT_SELECTED_TEACHER: str = (
+        "❌ Помилка. Ви ще не додали жодного вчителя."
+    )
+
+    TEACHER_LIST_TITLE: str = (
+        "<b>Ви додали таких вчителів:</b>\n\n"
+    )
+
+    PROMPT_TO_SEND: str = (
+        "<b>Шановний(-а), {teacher_name}</b>\n\n"
+        "📌 Перегляньте ваш розклад, там є зміни.."
+    )
+
+    SENDING_ERROR: str = (
+        "❌ Помилка під час відправки сповіщень, спробуйте знову"
+    )
+
+    SUBMIT: str = (
+        "✅ Сповіщення надіслано!\n\n"
+        "📨 Успішно: <b>{total_sent}</b>\n"
+        "❌ Не вдалося: <b>{total_failed}</b>"
+    )
 
 
 class TeachersChangeSchedule(BaseHandler):
     def register_handler(self) -> None:
         self.router.callback_query.register(
             self.handler,
-            F.data == HANDLER_TRIGGER
+            F.data == Triggers.HANDLER
         )
+
         self.router.callback_query.register(
             self.get_category,
             TeacherCategoryCallback.filter(),
@@ -42,170 +106,104 @@ class TeachersChangeSchedule(BaseHandler):
         )
 
         self.router.callback_query.register(
-            self.catch_back_button,
-            F.data == BACK_TRIGGGER,
-            TeacherSchedule.waiting_for_names
-        )
-
-        self.router.callback_query.register(
             self.done,
-            F.data == DONE_TRIGGER,
+            F.data == Triggers.DONE,
             StateFilter(TeacherSchedule.waiting_for_names, TeacherSchedule.waiting_for_category)
         )
 
         self.router.callback_query.register(
             self.show_list,
-            F.data == LIST_TRIGGER,
+            F.data == Triggers.LIST,
             TeacherSchedule.waiting_for_category
         )
 
         self.router.callback_query.register(
             self.submit,
-            F.data == SUBMIT_TRIGGER,
-            TeacherSchedule.waiting_for_confirmation
+            F.data == Triggers.SUBMIT,
+            StateFilter(TeacherSchedule.waiting_for_confirmation, TeacherSchedule.waiting_for_names)
         )
 
-        self.router.callback_query.register(
-            self.cancel,
-            F.data == CANCEL_TRIGGER,
-            TeacherSchedule.waiting_for_confirmation
+    @classmethod
+    @next_state(TeacherSchedule.waiting_for_category)
+    async def handler(cls, callback: CallbackQuery, state: FSMContext) -> None:
+        await callback.message.edit_text(
+            Messages.SELECT_CATEGORY,
+            reply_markup=TeacherTypes().get_keyboard(True, Triggers.HUB)
         )
 
-    @staticmethod
-    async def handler(callback: CallbackQuery, state: FSMContext) -> None:
-        await state.set_state(TeacherSchedule.waiting_for_category)
-
-        await callback.message.answer(
-            "Нижче оберіть категорію вчителя.",
-            reply_markup=TeacherTypes().get_keyboard()
-        )
-
-        # заглушка
-        await callback.answer()
-
-    @staticmethod
+    @classmethod
+    @next_state(TeacherSchedule.waiting_for_names)
     async def get_category(
+            cls,
             callback: CallbackQuery,
-            callback_data: TeacherCategoryCallback,
             state: FSMContext,
+            callback_data: TeacherCategoryCallback,
             db: DBConnector
     ) -> None:
         category = TeacherTypeEnum[callback_data.name.upper()]
-
         teachers = await db.qualification.get_by_category(category)
 
         if not teachers:
-            await callback.answer(
-                "❌ Помилка. Вчителів не знайдено. Зверніться до розробників.",
-                show_alert=True
-            )
-            return
-
-        await state.set_state(TeacherSchedule.waiting_for_names)
+            await callback.answer(Messages.NOT_FOUND_TEACHERS, show_alert=True)
+            raise ValidationError
 
         await callback.message.edit_text(
-            f"Ви обрали: {category.value}, тепер оберіть потрібних вчителів",
-            reply_markup=TeacherList().get_keyboard(teachers)
+            Messages.SELECT_NAME.format(category=category.value),
+            reply_markup=TeacherList().get_keyboard(teachers, Triggers.HANDLER)
         )
 
-    @staticmethod
+    @classmethod
     async def get_teacher_name(
+            cls,
             callback: CallbackQuery,
-            callback_data: TeacherListCallback,
-            state: FSMContext
+            state: FSMContext,
+            callback_data: TeacherListCallback
     ) -> None:
         data = await state.get_data()
-        dataset = set(data.get("dataset", []))
+        selected_teacher_ids = set(data.get("selected_teacher_ids", []))
 
         teacher_id = callback_data.teacher_id
 
-        added = teacher_id not in dataset
-        dataset.add(teacher_id) if added else dataset.remove(teacher_id)
+        added = teacher_id not in selected_teacher_ids
+        selected_teacher_ids.add(teacher_id) if added else selected_teacher_ids.remove(teacher_id)
         response = "Додано." if added else "Видалено."
 
-        await state.update_data(dataset=list(dataset))
+        await state.update_data(selected_teacher_ids=list(selected_teacher_ids))
         await callback.answer(response)
 
-    @staticmethod
-    async def catch_back_button(callback: CallbackQuery, state: FSMContext) -> None:
-        await state.set_state(TeacherSchedule.waiting_for_category)
-
-        await callback.message.edit_text(
-            "Оберіть потрібну категорію.",
-            reply_markup=TeacherTypes().get_keyboard()
-        )
-
+    @check_selected_forms()
+    @next_state(TeacherSchedule.waiting_for_confirmation)
     async def done(
             self,
             callback: CallbackQuery,
             state: FSMContext,
-            db: DBConnector,
-            teacher_names: Optional[List[str]] = None
+            teachers: Set[int],
+            db: DBConnector
     ) -> None:
-        if not teacher_names:
-            data = await state.get_data()
-            dataset = set(data.get("dataset", []))
-
-            validate, reason = self._validator(dataset)
-
-            if not validate:
-                await callback.answer(reason, show_alert=True)
-                return
-
-            teacher_names = await self._fetch_teacher_names_by_ids(dataset, db)
-
+        teacher_names = await self._fetch_teacher_names_by_ids(teachers, db)
         prompt = self._format_teacher_list(teacher_names)
 
         await state.update_data(teacher_names=teacher_names)
-        await state.set_state(TeacherSchedule.waiting_for_confirmation)
 
         await callback.message.edit_text(
             prompt,
             parse_mode=ParseMode.HTML,
-            reply_markup=SubmitKeyboard().get_keyboard(
-                submit_cb="submit_admin_schedule_teacher",
-                cancel_cb="cancel_admin_schedule_teacher"
-            )
+            reply_markup=SubmitKeyboard().get_keyboard(Triggers.SUBMIT, Triggers.HUB)
         )
 
-    async def show_list(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
-        data = await state.get_data()
-        dataset = set(data.get("dataset", []))
-
-        validate, reason = self._validator(dataset)
-
-        if not validate:
-            await callback.answer(reason, show_alert=True)
-            return
-
-        teacher_names = await self._fetch_teacher_names_by_ids(dataset, db)
-
+    @check_selected_forms()
+    @next_state(TeacherSchedule.waiting_for_names)
+    async def show_list(self, callback: CallbackQuery, state: FSMContext, teachers: Set[int], db: DBConnector) -> None:
+        teacher_names = await self._fetch_teacher_names_by_ids(teachers, db)
         prompt = self._format_teacher_list(teacher_names)
 
-        await state.set_state(TeacherSchedule.waiting_for_names)
+        await state.update_data(teacher_names=teacher_names)
 
         await callback.message.edit_text(
             prompt,
             parse_mode=ParseMode.HTML,
-            reply_markup=AdminTeacherBackToCategory().get_keyboard()
+            reply_markup=AddingListKeyboard().get_keyboard(Triggers.HANDLER, Triggers.SUBMIT)
         )
-
-    @staticmethod
-    def _validator(dataset: Set[int]) -> Tuple[bool, Optional[str]]:
-        """
-        Валідує dataset
-
-        Args:
-            dataset (Set[int]): множина з ID вчителів
-
-        Returns:
-            Tuple:
-                bool: чи проходить валідація
-                Optional[str]: причина фейлу валідації
-        """
-        if not dataset:
-            return False, "❌ Помилка. Ви ще не додали жодного вчителя."
-        return True, ""
 
     @staticmethod
     async def _fetch_teacher_names_by_ids(dataset: Set[int], db: DBConnector) -> List[str]:
@@ -225,58 +223,50 @@ class TeachersChangeSchedule(BaseHandler):
 
     @staticmethod
     def _format_teacher_list(teacher_names: List[str]) -> str:
-        prompt = "<b>Ви додали таких вчителів:</b>\n\n"
+        prompt = Messages.TEACHER_LIST_TITLE
         return prompt + "\n".join(f"🔹 {name}" for name in teacher_names)
 
-    @staticmethod
-    async def submit(callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
+    async def submit(self, callback: CallbackQuery, state: FSMContext, db: DBConnector) -> None:
         data = await state.get_data()
-        teacher_names = data.get("teacher_names")
 
-        total_sent, total_failed = 0, 0
+        try:
+            teacher_names = data.get("teacher_names")
+            total_sent, total_failed = 0, 0
+            json = JSONLoader("settings/vocative_teacher_shortname.json")
 
-        vocative_teacher_names = JSONLoader("settings/vocative_teacher_shortname.json")
+            for teacher_name in teacher_names:
+                user_ids = await db.register.get_by_teacher_name(teacher_name)
+                if not user_ids:
+                    continue
 
-        for teacher_name in teacher_names:
-            user_ids = await db.register.get_by_teacher_name(teacher_name)
+                vocative = self._get_vocative(teacher_name, json)
+                teacher_name = vocative if vocative else teacher_name
 
-            if not user_ids:
-                continue
+                prompt = Messages.PROMPT_TO_SEND.format(teacher_name=teacher_name)
+                send, failed = await broadcast(prompt, user_ids)
 
-            # Відрізати 2 останніх слова: ['Ім'я', 'По-батькові']
-            short_name_parts = teacher_name.split(" ")[-2:]
-            short_name = " ".join(short_name_parts)  # Збираємо назад рядок
+                total_sent += send
+                total_failed += failed
 
-            vocative_name = vocative_teacher_names.get(short_name)
-
-            if vocative_name:
-                teacher_name = vocative_name
-
-            prompt = (
-                f"<b>Шановний(-а), {teacher_name}</b>\n\n"
-                "📌 Перегляньте ваш розклад, там є зміни.."
+            await callback.message.edit_text(
+                Messages.SUBMIT.format(
+                    total_sent=total_sent,
+                    total_failed=total_failed
+                ),
+                parse_mode=ParseMode.HTML,
+                reply_markup=BackButton().get_keyboard(Triggers.HUB)
             )
 
-            send, failed = await broadcast(prompt, user_ids)
+            await state.clear()
 
-            total_sent += send
-            total_failed += failed
+        except Exception as e:
+            await callback.answer(Messages.SENDING_ERROR, show_alert=True)
+            self.log.error(f"Помилка під час відправки оголошення про зміну розкладу: {e}", exc_info=True)
 
-        await state.clear()
-
-        await callback.message.edit_text(
-            f"✅ Сповіщення надіслано!\n\n"
-            f"📨 Успішно: <b>{total_sent}</b>\n"
-            f"❌ Не вдалося: <b>{total_failed}</b>",
-            parse_mode=ParseMode.HTML
-        )
 
     @staticmethod
-    async def cancel(callback: CallbackQuery, state: FSMContext) -> None:
-        await state.clear()
-        await state.set_state(TeacherSchedule.waiting_for_category)
-
-        await callback.message.edit_text(
-            "Добре, оберіть потрібну категорію.",
-            reply_markup=TeacherTypes().get_keyboard()
-        )
+    def _get_vocative(teacher_name: str, json: JSONLoader) -> Optional[str]:
+        short_name_parts = teacher_name.split(" ")[-2:]
+        short_name = " ".join(short_name_parts)
+        vocative_name = json.get(short_name)
+        return vocative_name
