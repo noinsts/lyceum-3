@@ -34,7 +34,8 @@ class HubAdmin(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
             [InlineKeyboardButton(text='📢 Створити оголошення', callback_data="admin_broker")],
-            [InlineKeyboardButton(text='📅 Змінити розклад', callback_data='admin_schedule_hub')],
+            [InlineKeyboardButton(text='📅 Сповістити про зміни в розкладі', callback_data='admin_schedule_hub')],
+            [InlineKeyboardButton(text='Завантажити новий розклад', callback_data="refresh_cache_schedule")],
             [InlineKeyboardButton(text='🫐 Керування класами', callback_data='admin_form_controller_hub')],
             [InlineKeyboardButton(text='⏰ Скорочення дня', callback_data="admin_shortened_hub")]
         ]
@@ -56,9 +57,8 @@ class HubAdminShortened(BaseKeyboard):
 class HubAdminSchedule(BaseKeyboard):
     def get_keyboard(self) -> InlineKeyboardMarkup:
         kb = [
-            [InlineKeyboardButton(text='🧑🏻‍🎓', callback_data='admin_schedule_student'),
-             InlineKeyboardButton(text='🧑🏻‍🏫', callback_data='admin_schedule_teacher')],
-            [InlineKeyboardButton(text='🔃 Refresh', callback_data='refresh_cache_schedule')],
+            [InlineKeyboardButton(text='🧑🏻‍🎓 Для учнів', callback_data='admin_schedule_student')],
+            [InlineKeyboardButton(text='🧑🏻‍🏫 Для вчителів', callback_data='admin_schedule_teacher')],
             [InlineKeyboardButton(text='⬅️ Назад', callback_data='back_to_admin_hub')]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
