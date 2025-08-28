@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -197,6 +197,29 @@ class SelectForm(BaseKeyboard):
         control_kb.adjust(1)
         main_kb.attach(control_kb)
         return main_kb.as_markup()
+
+
+class SelectFormsMultiply(BaseKeyboard):
+    def get_keyboard(
+            self,
+            back_callback: Optional[str] = None,
+            done_callback: Optional[str] = None,
+            forms: Optional[Dict[str, bool]] = None
+    ) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+
+        for form, selected in forms.items():
+            kb.button(
+                text=f"{'✅' if selected else '❌'} {form}",
+                callback_data=FormsListCallback(form=form).pack()
+            )
+
+        kb.adjust(3)
+
+        kb.button(text="Назад", callback_data=back_callback)
+        kb.button(text="Готово", callback_data=done_callback)
+
+        return kb.as_markup()
 
 
 class SubmitKeyboard(BaseKeyboard):
