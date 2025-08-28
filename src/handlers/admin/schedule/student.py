@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import Set, Callable
-from functools import wraps
+from typing import List, Dict
 from enum import Enum
 
 from aiogram import F
@@ -9,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
 from ...base import BaseHandler
-from src.keyboards.inline import SubmitKeyboard, SelectForm, AddingListKeyboard, BackButton
+from src.keyboards.inline import SubmitKeyboard, BackButton, SelectFormsMultiply
 from src.utils import classes
 from src.states.admin import StudentSchedule
 from src.db.connector import DBConnector
@@ -19,30 +18,10 @@ from src.exceptions import ValidationError
 from src.decorators import next_state
 
 
-def check_selected_forms():
-    """
-    Декоратор перевіряє наявність елементів
-    в списку доданих класів
-    """
-    def decorator(handler_func: Callable):
-        @wraps(handler_func)
-        async def wrapper(self, event: CallbackQuery, state: FSMContext, *args, **kwargs):
-            forms = set((await state.get_data()).get("selected_forms", []))
-
-            if not forms:
-                await event.answer(Messages.NOT_SELECTED_FORMS, show_alert=True)
-                raise ValidationError
-
-            await handler_func(self, event, state, forms=forms, *args, **kwargs)
-        return wrapper
-    return decorator
-
-
 class Triggers(str, Enum):
     HUB = "admin_schedule_hub"
     HANDLER = "admin_schedule_student"
-    LIST = "selected_forms_list"
-    CONFIRMATION = "selected_forms_done"
+    CONFIRMATION = "admin_schedule_student_confirmation"
     SUBMIT = "admin_schedule_student_submit"
 
 
@@ -54,7 +33,7 @@ class Messages:
 
     NOT_SELECTED_FORMS: str = (
         "❌ Ви не вказали жодного класу. "
-        "Якщо хочете скасувати відправлення оголошення, то напишіть /cancel"
+        "Але це ще не пізно виправити"
     )
 
     CONFIRMATION_TITLE: str = (
@@ -63,10 +42,6 @@ class Messages:
 
     SELECT_NEXT_ACTION: str = (
         "\n<i>оберіть наступну дію</i>"
-    )
-
-    FORMS_LIST_TITLE: str = (
-        "<b>Список обраних класів</b>\n\n"
     )
 
     SEND_PROMPT: str = (
@@ -95,12 +70,6 @@ class StudentsChangeSchedule(BaseHandler):
         )
 
         self.router.callback_query.register(
-            self.selected_forms,
-            F.data == Triggers.LIST,
-            StudentSchedule.waiting_for_forms
-        )
-
-        self.router.callback_query.register(
             self.show_confirmation,
             F.data == Triggers.CONFIRMATION,
             StudentSchedule.waiting_for_forms
@@ -117,50 +86,49 @@ class StudentsChangeSchedule(BaseHandler):
     async def handler(cls, callback: CallbackQuery, state: FSMContext) -> None:
         forms = classes.CLASSES
 
+        forms: Dict[str, bool] = {item: False for item in forms}
+        await state.update_data(forms=forms)
+
         await callback.message.edit_text(
             Messages.SELECT_FORMS,
-            reply_markup=SelectForm().get_keyboard(forms, True, Triggers.HUB)
+            reply_markup=SelectFormsMultiply().get_keyboard(Triggers.HUB, Triggers.CONFIRMATION, forms)
         )
 
     @classmethod
     async def get_form(cls, callback: CallbackQuery, state: FSMContext, callback_data: FormsListCallback) -> None:
-        data = await state.get_data()
-        selected_forms = set(data.get("selected_forms", []))
-        form =  callback_data.form
+        forms = (await state.get_data()).get("forms")
+        form = callback_data.form
 
-        if form in selected_forms:
-            selected_forms.remove(form)
-            action = "видалено"
-        else:
-            selected_forms.add(form)
-            action = "додано"
+        forms[form] = not forms[form]
+        await state.update_data(forms=forms)
 
-        await state.update_data(selected_forms=list(selected_forms))
-        await callback.answer(f"{form}: {action}")
-
-    @check_selected_forms()
-    async def selected_forms(self, callback: CallbackQuery, state: FSMContext, forms: Set[str]) -> None:
-        prompt = Messages.FORMS_LIST_TITLE
-        prompt += self.format_forms_list(forms)
-
-        await callback.message.edit_text(
-            prompt,
-            reply_markup=AddingListKeyboard().get_keyboard(Triggers.HANDLER, Triggers.CONFIRMATION),
-            parse_mode=ParseMode.HTML
+        await callback.message.edit_reply_markup(
+            reply_markup=SelectFormsMultiply().get_keyboard(Triggers.HUB, Triggers.CONFIRMATION, forms)
         )
 
-    @check_selected_forms()
     @next_state(StudentSchedule.waiting_for_confirmation)
-    async def show_confirmation(self, callback: CallbackQuery, state: FSMContext, forms: Set[str]) -> None:
+    async def show_confirmation(self, callback: CallbackQuery, state: FSMContext, ) -> None:
+        forms = (await state.get_data()).get("forms")
+        selected_forms = [k for k, v in forms.items() if v]
+
+        if not selected_forms:
+            await callback.answer(
+                Messages.NOT_SELECTED_FORMS,
+                show_alert=True
+            )
+            raise ValidationError
+
+        await state.update_data(selected_forms=selected_forms)
+
         prompt = [
             Messages.CONFIRMATION_TITLE,
-            self.format_forms_list(forms),
+            self.format_forms_list(selected_forms),
             Messages.SELECT_NEXT_ACTION,
         ]
 
         await callback.message.edit_text(
             "\n".join(prompt),
-            reply_markup=SubmitKeyboard().get_keyboard(Triggers.SUBMIT, Triggers.HUB),
+            reply_markup=SubmitKeyboard().get_keyboard(Triggers.SUBMIT, Triggers.HANDLER),
             parse_mode=ParseMode.HTML
         )
 
@@ -168,7 +136,7 @@ class StudentsChangeSchedule(BaseHandler):
         data = await state.get_data()
 
         try:
-            selected_forms = set(data.get("selected_forms"))
+            selected_forms = data.get("selected_forms")
             total_sent, total_failed = 0, 0
 
             for form in selected_forms:
@@ -192,5 +160,5 @@ class StudentsChangeSchedule(BaseHandler):
             self.log.error(f"Помилка під час відправки сповіщення про зміну розкладу (учні): {e}", exc_info=True)
 
     @staticmethod
-    def format_forms_list(forms: Set[str]) -> str:
+    def format_forms_list(forms: List[str]) -> str:
         return "".join(f"🔹 {form}\n" for form in forms)
