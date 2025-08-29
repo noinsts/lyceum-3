@@ -20,12 +20,11 @@ from src.filters.callbacks import (
     FormsListCallback, TeacherListCallback, TeacherCategoryCallback
 )
 from src.keyboards.inline import (
-    BroadcastType, SelectForm, TeacherTypes, TeacherList,
-    BackButton, AddingListKeyboard, SubmitKeyboard
+    BroadcastType, SelectFormsMultiply, TeacherTypes, TeacherList,
+    BackButton, SubmitKeyboard
 )
 from src.decorators import next_state
 from src.states import BrokerStates
-from src.validators import validate_multiple_forms
 from src.db.connector import DBConnector
 from src.exceptions import ValidationError
 from src.service import broadcast
@@ -34,7 +33,6 @@ from src.enums import TeacherTypeEnum
 
 class Triggers(str, Enum):
     FORM_SHOW = "broker_show_form"
-    FORM_LIST = "selected_forms_list"
     FORM_DONE = "selected_forms_done"
 
     TEACHER_SHOW_CATEGORY = "broker_teacher_show_category"
@@ -70,10 +68,6 @@ class Messages:
     NO_TEACHER_IN_CATEGORY: str = (
         "❌ Cхоже база даних до кінця не заповнена, і вчителів цієї категорії ще не додано... "
         "Спробуйте іншим разом"
-    )
-
-    FORMS_LIST_TITLE: str = (
-        "<b>Список класів, який ви додали</b>\n"
     )
 
     SELECT_TEACHER_CATEGORY: str = (
@@ -157,12 +151,6 @@ class BrokerSystemHandler(BaseHandler, ABC):
         self.router.callback_query.register(
             self.get_form,
             FormsListCallback.filter(),
-            BrokerStates.waiting_for_form
-        )
-
-        self.router.callback_query.register(
-            self.forms_list,
-            F.data == Triggers.FORM_LIST,
             BrokerStates.waiting_for_form
         )
 
@@ -260,56 +248,35 @@ class BrokerSystemHandler(BaseHandler, ABC):
     async def show_forms(self, callback: CallbackQuery, state: FSMContext, db: DBConnector):
         forms = await db.form.get_all_forms()
 
-        if not forms:
-            await callback.answer(Messages.NO_FORMS, show_alert=True)
-            raise ValidationError
+        dict_forms: Dict[str, bool] = {item: False for item in forms}
 
-        await state.update_data(forms=forms)
+        await state.update_data(forms=dict_forms)
 
         await callback.message.edit_text(
             Messages.SELECT_FORM,
-            reply_markup=SelectForm().get_keyboard(forms, True, self.triggers['handler'])
+            reply_markup=SelectFormsMultiply().get_keyboard(self.triggers['handler'], Triggers.FORM_DONE, dict_forms)
         )
 
     async def get_form(self, callback: CallbackQuery, state: FSMContext, callback_data: FormsListCallback) -> None:
+        forms = (await state.get_data()).get("forms")
         form = callback_data.form
-        data = await state.get_data()
-        forms = data.get("forms")
-        selected_forms = set(data.get("selected_forms", []))
+        forms[form] = not forms[form]
 
-        try:
-            prompt, data = validate_multiple_forms(form, selected_forms, forms)
-            await state.update_data(selected_forms=list(data))
-            await callback.answer(prompt)
-        except ValidationError as e:
-            await callback.answer(str(e), show_alert=True)
+        await state.update_data(forms=forms)
 
-    @next_state(BrokerStates.waiting_for_continue_form)
-    async def forms_list(self, callback: CallbackQuery, state: FSMContext) -> None:
-        forms = (await state.get_data()).get("selected_forms")
-
-        if not forms:
-            await callback.answer(Messages.NO_SELECTED_FORMS, show_alert=True)
-            raise ValidationError
-
-        prompt = [
-            Messages.FORMS_LIST_TITLE,
-            (f"🔹 {form}" for form in forms)
-        ]
-
-        await callback.message.edit_text(
-            "\n".join(prompt),
-            parse_mode=ParseMode.HTML,
-            reply_markup=AddingListKeyboard().get_keyboard(Triggers.FORM_SHOW, Triggers.FORM_DONE)
+        await callback.message.edit_reply_markup(
+            reply_markup=SelectFormsMultiply().get_keyboard(self.triggers['handler'], Triggers.FORM_DONE, forms)
         )
 
     async def forms_done(self, callback: CallbackQuery, state: FSMContext) -> None:
-        selected_forms = (await state.get_data()).get("selected_forms")
+        forms = (await state.get_data()).get("forms")
+        selected_forms = [k for k, v in forms.items() if v]
 
         if not selected_forms:
             await callback.answer(Messages.NO_SELECTED_FORMS, show_alert=True)
             raise ValidationError
 
+        await state.update_data(selected_forms=selected_forms)
         await self.show_message_feedback(callback, state)
 
     # =========================
