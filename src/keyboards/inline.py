@@ -438,3 +438,11 @@ class Resources(BaseKeyboard):
             [InlineKeyboardButton(text="💬 Telegram (неофіційний)", url="https://www.t.me/omyzsh/")]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
+
+
+class TelegramChannel(BaseKeyboard):
+    def get_keyboard(self) -> InlineKeyboardMarkup:
+        kb = [
+            [InlineKeyboardButton(text="💬 Telegram (неофіційний)", url="https://www.t.me/omyzsh/")]
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=kb)
