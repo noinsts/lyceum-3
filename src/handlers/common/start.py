@@ -8,6 +8,7 @@ from src.enums import DBUserType
 from src.handlers.base import BaseHandler
 from src.keyboards.reply import HubMenu, HubTeacher
 from src.handlers.common.register import RegisterHandler
+from src.keyboards.inline import TelegramChannel
 from src.handlers.admin.hub import AdminHubHandler
 from src.handlers.developer.hub import DevHubHandler
 from settings.admins import Admins
@@ -67,9 +68,8 @@ class StartHandler(BaseHandler):
             # якщо користувач не зареєстрований
             await message.answer(
                 "👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
-                "Будь-ласка, зареєструйтеся, щоб скористатись всіма можливостями бота\n\n"
-                "⚙️ Telegram-канал бота: поки що відсутній (скоро буде)",
-                # TODO: додати посилання на тгк бота, коли буде
+                "Будь-ласка, зареєструйтеся, щоб скористатись всіма можливостями бота\n\n",
+                reply_markup=TelegramChannel().get_keyboard(),
                 parse_mode=ParseMode.HTML
             )
             await RegisterHandler().start_register(message, state)
