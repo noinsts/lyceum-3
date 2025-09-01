@@ -306,7 +306,7 @@ class CardRarity(BaseKeyboard):
 
 
 class DeveloperSearchType(BaseKeyboard):
-    def get_keyboard(self) -> InlineKeyboardMarkup:
+    def get_keyboard(self, back_callback: Optional[str] = None) -> InlineKeyboardMarkup:
         kb = [
             [InlineKeyboardButton(
                 text="За ID",
@@ -315,6 +315,10 @@ class DeveloperSearchType(BaseKeyboard):
             [InlineKeyboardButton(
                 text="За ім'ям вчителя",
                 callback_data=DeveloperSearchCallback(method=DeveloperSearchEnum.BY_TEACHER_NAME).pack()
+            )],
+            [InlineKeyboardButton(
+                text="Назад",
+                callback_data=back_callback
             )]
         ]
         return InlineKeyboardMarkup(inline_keyboard=kb)
