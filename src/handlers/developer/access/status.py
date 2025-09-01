@@ -4,15 +4,17 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 
 from ...base import BaseHandler
-from src.keyboards.inline import DeveloperSearchType
+from src.keyboards.inline import DeveloperSearchType, BackButton
 from src.filters.callbacks import DeveloperSearchCallback, DeveloperSearchEnum
 from src.states.developer import AccessStatus
 from src.db.connector import DBConnector
 from src.validators import validate_user_id, validate_teacher_name
 from src.exceptions import ValidationError
+from src.decorators import next_state
 
 
 class Triggers:
+    HUB = "dev_access_hub"
     HANDLER = "dev_access_status"
 
 
@@ -71,12 +73,13 @@ class StatusAccessHandler(BaseHandler):
             AccessStatus.waiting_for_teacher_name
         )
 
-    @staticmethod
-    async def handler(callback: CallbackQuery, state: FSMContext) -> None:
-        await state.set_state(AccessStatus.waiting_for_type)
-
-        await callback.message.answer(Messages.HANDLER, reply_markup=DeveloperSearchType().get_keyboard())
-        await callback.answer()
+    @classmethod
+    @next_state(AccessStatus.waiting_for_type)
+    async def handler(cls, callback: CallbackQuery, state: FSMContext) -> None:
+        await callback.message.edit_text(
+            Messages.HANDLER,
+            reply_markup=DeveloperSearchType().get_keyboard(Triggers.HUB)
+        )
 
     @staticmethod
     async def get_type(callback: CallbackQuery, callback_data: DeveloperSearchCallback, state: FSMContext) -> None:
@@ -151,5 +154,9 @@ class StatusAccessHandler(BaseHandler):
             status=status
         )
 
-        await message.answer(response, parse_mode=ParseMode.HTML)
+        await message.answer(
+            response,
+            parse_mode=ParseMode.HTML,
+            reply_markup=BackButton().get_keyboard(Triggers.HUB)
+        )
         await state.clear()
