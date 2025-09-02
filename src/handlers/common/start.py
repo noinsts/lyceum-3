@@ -19,19 +19,11 @@ class StartHandler(BaseHandler):
     def register_handler(self) -> None:
         self.router.message.register(self.start_cmd, CommandStart())
 
-    @staticmethod
-    async def start_cmd(message: Message, state: FSMContext, db: DBConnector) -> None:
+    async def start_cmd(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Обробник команди start"""
         user_id = message.from_user.id
 
-        admins = Admins().ADMINS
-        developers = Developers().DEVELOPERS
-
-        if user_id in developers:
-            await DevHubHandler().show_hub(message, state)
-
-        if user_id in admins:
-            await AdminHubHandler().show_hub(message, state)
+        await self._handle_special_users(message, state, user_id)
 
         if await db.register.is_exists(user_id):
             # якщо користувач зареєстрований
@@ -73,3 +65,11 @@ class StartHandler(BaseHandler):
                 parse_mode=ParseMode.HTML
             )
             await RegisterHandler().start_register(message, state)
+
+    @classmethod
+    async def _handle_special_users(cls, message: Message, state: FSMContext, user_id: int) -> None:
+        if user_id in Admins().ADMINS:
+            await DevHubHandler().show_hub(message, state)
+
+        if user_id in Developers().DEVELOPERS:
+            await AdminHubHandler().show_hub(message, state)
