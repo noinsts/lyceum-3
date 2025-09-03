@@ -163,19 +163,17 @@ class RegisterHandler(BaseHandler):
         await state.update_data(student_name=message.text)
         await self.finally_register(message, state, db)
 
-    @next_state(RegisterStates.finally_register)
     async def get_teacher_name(self, message: Message, state: FSMContext, db: DBConnector) -> None:
         """Отримання імені вчителя від користувача"""
         teacher_name = message.text.strip()
 
         try:
             await validate_teacher_name(teacher_name, db)
+            await state.update_data(teacher_name=teacher_name)
+            await state.set_state(RegisterStates.finally_register)
+            await self.finally_register(message, state, db)
         except ValidationError as e:
             await message.answer(str(e))
-            return
-
-        await state.update_data(teacher_name=teacher_name)
-        await self.finally_register(message, state, db)
 
     # =================================
     # Реєстрація
