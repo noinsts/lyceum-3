@@ -1,3 +1,6 @@
+from typing import Dict, Any
+from dataclasses import dataclass
+
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.filters import CommandStart
@@ -13,6 +16,27 @@ from src.handlers.admin.hub import AdminHubHandler
 from src.handlers.developer.hub import DevHubHandler
 from settings.admins import Admins
 from settings.developers import Developers
+from src.db.models import UserModel
+
+
+@dataclass(frozen=True)
+class Messages:
+    STUDENT: str = (
+        "👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
+        "Ви зареєстровані як {student_name}, учень(-ця) <b>{form}</b> класу.\n\n"
+        "Якщо хочете змінити дані, використайте команду /register"
+    )
+
+    TEACHER: str = (
+        "👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
+        "Ви зареєстровані як вчитель <b>{teacher_name}</b>\n\n"
+        "Якщо хочете змінити дані, використайте команду /register"
+    )
+
+    UNREGISTERED_USER: str = (
+        "👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
+        "Будь-ласка, зареєструйтеся, щоб скористатись всіма можливостями бота\n\n"
+    )
 
 
 class StartHandler(BaseHandler):
@@ -25,46 +49,12 @@ class StartHandler(BaseHandler):
 
         await self._handle_special_users(message, state, user_id)
 
-        if await db.register.is_exists(user_id):
-            # якщо користувач зареєстрований
-            user_type = await db.register.get_user_type(user_id)
+        user = await db.register.get_user(user_id)
 
-            match user_type:
-                case DBUserType.STUDENT:
-                    form = await db.register.get_form(user_id)
-                    student_name = await db.register.get_student_name(user_id)
-                    prompt = (
-                        f"👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
-                        f"Ви зареєстровані як {student_name}, учень(-ця) <b>{form}</b> класу.\n\n"
-                        f"Якщо хочете змінити дані, використайте команду /register"
-                    )
-                    rm = HubMenu().get_keyboard()
-                case "teacher":
-                    teacher_name = await db.register.get_teacher_name(user_id)
-                    prompt = (
-                        f"👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
-                        f"Ви зареєстровані як вчитель <b>{teacher_name}</b>\n\n"
-                        f"Якщо хочете змінити дані, використайте команду /register"
-                    )
-                    rm = HubTeacher().get_keyboard()
-                case _:
-                    prompt = (
-                        "⚠️ Помилка: тип вашого акаунту не розпізнано.\n"
-                        "Зверніться до адміністратора або пройдіть реєстрацію заново (/register)"
-                    )
-                    rm = None
-
-            await message.answer(prompt, reply_markup=rm, parse_mode=ParseMode.HTML)
-
+        if user:
+            await self._handle_registered_user(message, user)
         else:
-            # якщо користувач не зареєстрований
-            await message.answer(
-                "👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
-                "Будь-ласка, зареєструйтеся, щоб скористатись всіма можливостями бота\n\n",
-                reply_markup=TelegramChannel().get_keyboard(),
-                parse_mode=ParseMode.HTML
-            )
-            await RegisterHandler().start_register(message, state)
+            await self._handler_unregistered_user(message, state)
 
     @classmethod
     async def _handle_special_users(cls, message: Message, state: FSMContext, user_id: int) -> None:
@@ -73,3 +63,40 @@ class StartHandler(BaseHandler):
 
         if user_id in Developers().DEVELOPERS:
             await AdminHubHandler().show_hub(message, state)
+
+    async def _handle_registered_user(self, message: Message, user: UserModel) -> None:
+        match user.user_type:
+            case DBUserType.STUDENT:
+                kwargs = self._get_student_kwargs(user)
+            case DBUserType.TEACHER:
+                kwargs = self._get_teacher_kwargs(user)
+
+        await message.answer(**kwargs)
+
+    @classmethod
+    def _get_student_kwargs(cls, user: UserModel) -> Dict[str, Any]:
+        return {
+            "text": Messages.STUDENT.format(
+                form=user.form,
+                student_name=user.student_name
+            ),
+            "reply_markup": HubMenu().get_keyboard(),
+            "parse_mode": ParseMode.HTML
+        }
+
+    @classmethod
+    def _get_teacher_kwargs(cls, user: UserModel) -> Dict[str, Any]:
+        return {
+            "text": Messages.TEACHER.format(teacher_name=user.teacher_name),
+            "reply_markup": HubTeacher().get_keyboard(),
+            "parse_mode": ParseMode.HTML
+        }
+
+    @classmethod
+    async def _handler_unregistered_user(cls, message: Message, state: FSMContext) -> None:
+        await message.answer(
+            Messages.UNREGISTERED_USER,
+            reply_markup=TelegramChannel().get_keyboard(),
+            parse_mode=ParseMode.HTML
+        )
+        await RegisterHandler().start_register(message, state)
