@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 from ...base import BaseHandler
-from src.keyboards.inline import TeacherTypes, TeacherList, SelectForm, SubmitKeyboard
+from src.keyboards.inline import TeacherTypes, TeacherList, SelectForm, SubmitKeyboard, BackButton
 from src.states.admin import TeacherFormStates
 from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback, FormsListCallback
 from src.db.connector import DBConnector
@@ -17,6 +17,7 @@ from src.exceptions import ValidationError
 
 
 class Triggers(str, Enum):
+    HUB = "admin_form_controller_hub"
     HANDLER = "set_form_teacher"
     BACK_TO_FORM = "back_to_forms_selection"
     BACK_TO_CATEGORY = "set_tform_get_category"
@@ -232,6 +233,7 @@ class SetFormTeacherHandler(BaseHandler):
 
             await callback.message.edit_text(
                 Messages.SUBMIT.format(form=form, teacher_name=teacher_name),
+                reply_markup=BackButton().get_keyboard(Triggers.HUB),
                 parse_mode=ParseMode.HTML
             )
 
