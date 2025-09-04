@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 from ...base import BaseHandler
-from src.keyboards.inline import TeacherTypes, TeacherList, SelectForm, SubmitKeyboard
+from src.keyboards.inline import TeacherTypes, TeacherList, SelectForm, SubmitKeyboard, BackButton
 from src.states.admin import TeacherFormStates
 from src.filters.callbacks import TeacherCategoryCallback, TeacherListCallback, FormsListCallback
 from src.db.connector import DBConnector
@@ -17,6 +17,7 @@ from src.exceptions import ValidationError
 
 
 class Triggers(str, Enum):
+    HUB = "admin_form_controller_hub"
     HANDLER = "set_form_teacher"
     BACK_TO_FORM = "back_to_forms_selection"
     BACK_TO_CATEGORY = "set_tform_get_category"
@@ -53,7 +54,7 @@ class Messages:
     )
 
     CHANGE_TEACHER_FORM: str = (
-        "⚠️ Ви збираєтесь змінити класного керівника для <b>{form}</b> класу.\n"
+        "⚠️ Ви збираєтесь змінити класного керівника для <b>{form}</b> класу.\n\n"
         "Зараз: <b>{form_teacher}</b>\n"
         "Новий: <b>{teacher_name}</b>\n\n"
         "✅ Підтвердіть дію або скасуйте."
@@ -199,13 +200,14 @@ class SetFormTeacherHandler(BaseHandler):
 
         form = (await state.get_data()).get("form")
 
-        form_teacher = await db.form.get_form_teacher(form)
+        before_teacher_id = await db.form.get_form_teacher(form)
 
-        if form_teacher:
+        if before_teacher_id:
+            before_teacher_name = await db.verification.get_teacher_name_by_id(before_teacher_id)
             prompt = Messages.CHANGE_TEACHER_FORM.format(
                 teacher_name=teacher_name,
                 form=form,
-                form_teacher=form_teacher
+                form_teacher=before_teacher_name
             )
         else:
             prompt = Messages.NEW_TEACHER_FORM.format(
@@ -232,6 +234,7 @@ class SetFormTeacherHandler(BaseHandler):
 
             await callback.message.edit_text(
                 Messages.SUBMIT.format(form=form, teacher_name=teacher_name),
+                reply_markup=BackButton().get_keyboard(Triggers.HUB),
                 parse_mode=ParseMode.HTML
             )
 
