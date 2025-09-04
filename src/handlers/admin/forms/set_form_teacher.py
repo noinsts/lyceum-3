@@ -200,13 +200,14 @@ class SetFormTeacherHandler(BaseHandler):
 
         form = (await state.get_data()).get("form")
 
-        form_teacher = await db.form.get_form_teacher(form)
+        before_teacher_id = await db.form.get_form_teacher(form)
 
-        if form_teacher:
+        if before_teacher_id:
+            before_teacher_name = await db.verification.get_teacher_name_by_id(before_teacher_id)
             prompt = Messages.CHANGE_TEACHER_FORM.format(
                 teacher_name=teacher_name,
                 form=form,
-                form_teacher=form_teacher
+                form_teacher=before_teacher_name
             )
         else:
             prompt = Messages.NEW_TEACHER_FORM.format(
