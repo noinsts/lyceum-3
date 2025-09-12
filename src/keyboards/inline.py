@@ -251,7 +251,9 @@ class DeveloperHub(BaseKeyboard):
             [InlineKeyboardButton(text='📊 Server stats', callback_data='dev_server_stats')],
             [InlineKeyboardButton(text='📢 Broker', callback_data='dev_broker')],
             [InlineKeyboardButton(text='🗂 Collections', callback_data='dev_collections_hub')],
-            [InlineKeyboardButton(text='🌎 Interesting', callback_data="dev_interesting_hub")]
+            [InlineKeyboardButton(text='🌎 Interesting', callback_data="dev_interesting_hub")],
+            [InlineKeyboardButton(text="Admin list", callback_data="dev_admin_list"),
+             InlineKeyboardButton(text="Developer list", callback_data="dev_dev_list")]
         ]
 
         return InlineKeyboardMarkup(inline_keyboard=kb)
