@@ -11,11 +11,12 @@ class ScheduleParsers:
         Функція повертає номер тижня
 
         Returns:
-            int 0: для непарного тижня (чисельник)
-            int 1: для парного тижня (знаменник)
-
+            int 0: чисельник
+            int 1: знаменник
         """
-        return 0 if datetime.now(pytz.timezone("Europe/Kyiv")).isocalendar().week % 2 != 0 else 1
+        kyiv_time = datetime.now(pytz.timezone("Europe/Kyiv"))
+        week_number = kyiv_time.isocalendar().week
+        return week_number % 2
 
     def parse_cell_value(self, cell_value: str) -> Dict[str, Optional[str]]:
         """
