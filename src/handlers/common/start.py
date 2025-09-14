@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 from aiogram.fsm.context import FSMContext
@@ -29,7 +29,9 @@ class Messages:
 
     TEACHER: str = (
         "👋🏻 Вітаємо в чат-боті <b>Березанського ліцею №3</b>\n\n"
-        "Ви зареєстровані як вчитель <b>{teacher_name}</b>\n\n"
+        "Ви зареєстровані як вчитель <b>{teacher_name}</b>\n"
+        "Статус верифікації: <b>{is_verif}</b>\n"
+        "Класний керівник: <b>{form}</b>\n\n"
         "Якщо хочете змінити дані, використайте команду /register"
     )
 
@@ -52,7 +54,7 @@ class StartHandler(BaseHandler):
         user = await db.register.get_user(user_id)
 
         if user:
-            await self._handle_registered_user(message, user)
+            await self._handle_registered_user(message, user, db)
         else:
             await self._handler_unregistered_user(message, state)
 
@@ -64,12 +66,15 @@ class StartHandler(BaseHandler):
         if user_id in Developers().DEVELOPERS:
             await AdminHubHandler().show_hub(message, state)
 
-    async def _handle_registered_user(self, message: Message, user: UserModel) -> None:
+    async def _handle_registered_user(self, message: Message, user: UserModel, db: DBConnector) -> None:
         match user.user_type:
             case DBUserType.STUDENT:
                 kwargs = self._get_student_kwargs(user)
             case DBUserType.TEACHER:
-                kwargs = self._get_teacher_kwargs(user)
+                is_verif = await db.verification.is_verif(message.from_user.id, user.teacher_name)
+                teacher_id = await db.verification.get_teacher_id(user.teacher_name)
+                form = await db.form.get_form_by_teacher(teacher_id)
+                kwargs = self._get_teacher_kwargs(user.teacher_name, is_verif, form)
 
         await message.answer(**kwargs)
 
@@ -85,9 +90,18 @@ class StartHandler(BaseHandler):
         }
 
     @classmethod
-    def _get_teacher_kwargs(cls, user: UserModel) -> Dict[str, Any]:
+    def _get_teacher_kwargs(
+            cls,
+            teacher_name: str,
+            is_verif: Optional[bool],
+            form: Optional[str]
+    ) -> Dict[str, Any]:
         return {
-            "text": Messages.TEACHER.format(teacher_name=user.teacher_name),
+            "text": Messages.TEACHER.format(
+                teacher_name=teacher_name,
+                is_verif="✅" if is_verif else "❌",
+                form=form or "не встановлено"
+            ),
             "reply_markup": HubTeacher().get_keyboard(),
             "parse_mode": ParseMode.HTML
         }
