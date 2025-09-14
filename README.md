@@ -170,4 +170,15 @@ python3 run.py
 Цей проєкт ліцензовано під [MIT License](./LICENSE).
 
 ## ✨ Автор
-**[@noinsts](https://github.com/noinsts)** – автор і розробник цього бота.
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/noinsts">
+        <img src="https://avatars.githubusercontent.com/u/114863893?v=4" width="100px;" alt=""/>
+        <br />
+        <sub><b>noinsts</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
