@@ -11,6 +11,7 @@ from src.states import DevAddAccess
 from src.keyboards.inline import SubmitKeyboard
 from src.validators import validate_user_id, validate_teacher_name
 from src.exceptions import ValidationError
+from src.service import broadcast
 
 
 class Triggers:
@@ -66,6 +67,10 @@ class Messages:
         "✅ <b>Успішно</b>\n\n"
         "Доступ для <code>{name}</code> "
         "(ID: <code>{user_id}</code>) додано до системи."
+    )
+
+    USER_MESSAGE: str = (
+        "🎉 Вітаємо, вам назначено верифікацію."
     )
 
     CANCELED = (
@@ -221,6 +226,8 @@ class AddAccessHandler(BaseHandler):
                 name=teacher_name,
                 user_id=user_id
             )
+
+            _, _ = await broadcast(Messages.USER_MESSAGE, [user_id])
 
             await callback.message.edit_text(response, parse_mode=ParseMode.HTML)
             await callback.answer()
