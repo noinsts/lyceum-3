@@ -23,7 +23,7 @@ class Messages:
     )
 
     WEEKEND = (
-        "🎉 Сьогодні — вихідний! Це ідеальний час, щоб відпочити та набратися сил. "
+        "🎉 {day} — вихідний! Це ідеальний час, щоб відпочити та набратися сил. "
         "Насолоджуйтеся моментом! 😊"
     )
 
@@ -56,7 +56,7 @@ class LessonsByDaysHandler(BaseHandler):
         day_word = "завтра" if is_tomorrow else "сьогодні"
 
         if not day_name:
-            await message.answer(Messages.WEEKEND)
+            await message.answer(Messages.WEEKEND.format(day_word.capitalize()))
             await message.answer_sticker(Messages.STICKER)
             return
 
