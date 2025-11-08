@@ -160,15 +160,10 @@ cp .env.example .env
 Заповніть `.env` файл:
 
 ```env
-TOKEN = ""
-
-SHEET_ID = "-4l8"
-
-NGROK = ""
-
-POSTGRESQL_URL = ""
-
-REDIS_URL = ""
+TOKEN = ""         # Токен бота
+SHEET_ID = "-4l8"  # ID Google таблиці  
+POSTGRESQL_URL = ""# Посилання на PostgreSQL  
+REDIS_URL = ""     # Посилання на Redis
 ```
 
 ### Крок 3: Google API
