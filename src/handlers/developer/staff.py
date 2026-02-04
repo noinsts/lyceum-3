@@ -8,9 +8,10 @@ from aiogram.types import CallbackQuery
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 
-from ...base import BaseHandler
-from src.bot_instance import get_bot
+from ..base import BaseHandler
 from src.keyboards.inline import BackButton
+from settings.admins import Admins
+from settings.developers import Developers
 
 
 @dataclass(frozen=True)
@@ -74,9 +75,7 @@ class SpecialListHandler(BaseHandler, ABC):
         )
 
     async def handler(self, callback: CallbackQuery) -> None:
-        bot = get_bot()
-
-        tasks = [self._get_user_id(bot, uid) for uid in self.user_ids]
+        tasks = [self._get_user_id(callback.bot, uid) for uid in self.user_ids]
         user_info_list = await asyncio.gather(*tasks)
 
         prompt = self._create_prompt(user_info_list)
@@ -121,3 +120,37 @@ class SpecialListHandler(BaseHandler, ABC):
                     uid=user_info['uid']
                 )
         return prompt
+
+
+class DevListHandler(SpecialListHandler):
+    @property
+    def triggers(self) -> Dict[str, str]:
+        return {
+            "hub": "dev_hub",
+            "handler": "dev_dev_list"
+        }
+
+    @property
+    def user_type(self) -> str:
+        return "розробників"
+
+    @property
+    def user_ids(self) -> List[int]:
+        return Developers.DEVELOPERS
+
+
+class AdminListHandler(SpecialListHandler):
+    @property
+    def triggers(self) -> Dict[str, str]:
+        return {
+            "hub": "dev_hub",
+            "handler": "dev_admin_list"
+        }
+
+    @property
+    def user_type(self) -> str:
+        return "адміністраторів"
+
+    @property
+    def user_ids(self) -> List[int]:
+        return Admins.ADMINS
