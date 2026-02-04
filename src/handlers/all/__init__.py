@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from .calls import CallsHandler
+from .timetable import TimetableHandler
 from .resources import ResourcesHandler
 from .cards import get_all_cards_routers
 
@@ -10,7 +10,7 @@ def get_a_router() -> Router:
     router = Router(name="all")
 
     routers = [
-        CallsHandler().get_router(),
+        TimetableHandler().get_router(),
         ResourcesHandler().get_router(),
         *get_all_cards_routers()
     ]

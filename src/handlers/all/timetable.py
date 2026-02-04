@@ -18,12 +18,13 @@ class Triggers(str, Enum):
 @dataclass(frozen=True)
 class Messages:
     TITLE: str = "🔔 <b>Розклад дзвінків</b>\n\n"
+    SHORTENED: str = "Скорочені уроки: {emoji}\n\n"
 
 
 KYIV_TZ = timezone("Europe/Kyiv")
 
 
-class CallsHandler(BaseHandler):
+class TimetableHandler(BaseHandler):
     def register_handler(self):
         self.router.message.register(self.handler, F.text == Triggers.HANDLER)
 
@@ -33,7 +34,8 @@ class CallsHandler(BaseHandler):
         day = await db.day.get_day(date)
 
         schedule = day.call_schedule if day and day.call_schedule else self._get_default_schedule()
-        text = f"{Messages.TITLE}{schedule}"
+        shortened_emoji = "✅" if day.is_shortened else "❌"
+        text = f"{Messages.TITLE}{Messages.SHORTENED.format(emoji=shortened_emoji)}{schedule}"
 
         await message.answer(text, parse_mode=ParseMode.HTML)
 
