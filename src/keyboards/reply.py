@@ -34,8 +34,7 @@ class HubMenu(BaseKeyboard):
         kb = [
             [KeyboardButton(text='📅 Розклад на сьогодні'), KeyboardButton(text='🌇 Розклад на завтра')],
             [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='📝 Розклад на весь тиждень')],
-            [KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='🤓 Олімпіади')],
-            [KeyboardButton(text='❓ Сьогодні скорочені уроки?')]
+            [KeyboardButton(text='🌐 Ресурси школи'), KeyboardButton(text='🤓 Олімпіади')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 
@@ -46,7 +45,7 @@ class HubTeacher(BaseKeyboard):
             [KeyboardButton(text='🚦 Мій пост'), KeyboardButton(text='📅 Класи на сьогодні')],
             [KeyboardButton(text='📝 Тижневий розклад'), KeyboardButton(text='🌅 Розклад на завтра')],
             [KeyboardButton(text='🔔 Розклад дзвінків'), KeyboardButton(text='🌐 Ресурси школи')],
-            [KeyboardButton(text='❓ Сьогодні скорочені уроки?'), KeyboardButton(text="👥 Мій клас")],
+            [KeyboardButton(text="👥 Мій клас")],
             [KeyboardButton(text='⏰ Кількість академічних годин'), KeyboardButton(text='🚀 Хаб олімпіад')]
         ]
         return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
