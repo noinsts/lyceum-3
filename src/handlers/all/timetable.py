@@ -21,21 +21,25 @@ class Messages:
     SHORTENED: str = "Скорочені уроки: {emoji}\n\n"
 
 
-KYIV_TZ = timezone("Europe/Kyiv")
-
-
 class TimetableHandler(BaseHandler):
     def register_handler(self):
         self.router.message.register(self.handler, F.text == Triggers.HANDLER)
 
     async def handler(self, message: Message, db: DBConnector) -> None:
         """Обробник кнопки 🔔 Розклад дзвінків"""
-        date = message.date.astimezone(KYIV_TZ).date()
+        date = message.date.astimezone(timezone("Europe/Kyiv")).date()
         day = await db.day.get_day(date)
 
+        is_shortened = day.is_shortened if day else False
+        shortened_emoji = "✅" if is_shortened else "❌"
+
         schedule = day.call_schedule if day and day.call_schedule else self._get_default_schedule()
-        shortened_emoji = "✅" if day.is_shortened else "❌"
-        text = f"{Messages.TITLE}{Messages.SHORTENED.format(emoji=shortened_emoji)}{schedule}"
+
+        text =  (
+            f"{Messages.TITLE}"
+            f"{Messages.SHORTENED.format(emoji=shortened_emoji)}"
+            f"{schedule}"
+        )
 
         await message.answer(text, parse_mode=ParseMode.HTML)
 
