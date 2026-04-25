@@ -168,7 +168,7 @@ class RegisterHandler(BaseHandler):
         teacher_name = message.text.strip()
 
         try:
-            await validate_teacher_name(teacher_name, db)
+            await validate_teacher_name(teacher_name)
             await state.update_data(teacher_name=teacher_name)
             await state.set_state(RegisterStates.finally_register)
             await self.finally_register(message, state, db)

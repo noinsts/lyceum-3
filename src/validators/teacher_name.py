@@ -17,7 +17,7 @@ TEACHER_NAME_PATTERN:
 """
 
 
-async def validate_teacher_name(teacher_name: str, db: DBConnector) -> bool:
+async def validate_teacher_name(teacher_name: str) -> bool:
     """
     Валідує ім'я вчителя, наприклад (Іванов Іван Іванович)
 
@@ -42,12 +42,5 @@ async def validate_teacher_name(teacher_name: str, db: DBConnector) -> bool:
 
     if not isinstance(teacher_name, str) or not match:
         raise ValidationError("Використовуйте формат \"Прізвище ім'я по-батькові\"")
-
-    if not await db.register.teacher_is_exists(teacher_name):
-        raise ValidationError(
-            "🚫 Такого ПІП немає в нашому списку вчителів. "
-            "Можливо, ви ввели з помилкою або ще не додані до бази.\n"
-            "Спробуйте ще раз або зверніться до @omyzsh 👨‍💻"
-        )
 
     return True
