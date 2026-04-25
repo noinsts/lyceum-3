@@ -119,7 +119,7 @@ class StatusAccessHandler(BaseHandler):
         teacher_name = message.text
 
         try:
-            await validate_teacher_name(teacher_name, db)
+            await validate_teacher_name(teacher_name)
         except ValidationError as e:
             await message.answer(str(e))
             return

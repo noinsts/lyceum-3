@@ -140,7 +140,7 @@ class AddAccessHandler(BaseHandler):
         user_id = int(user_id)
 
         try:
-            await validate_teacher_name(tn, db)
+            await validate_teacher_name(tn)
         except ValidationError as e:
             await message.answer(str(e))
             return False
